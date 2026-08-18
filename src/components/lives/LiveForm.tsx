@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { createLive, updateLive } from "@/app/(app)/lives/actions";
-import { INITIAL_LIVE_FORM_STATE } from "@/lib/live-form-state";
+import { INITIAL_LIVE_FORM_STATE, parseCoArtists } from "@/lib/live-form-state";
 import { IMAGE_BUCKET } from "@/lib/storage";
 import { toTimeInputValue } from "@/lib/format";
 import { prefecturesByRegion } from "@/lib/prefectures";
@@ -18,13 +18,22 @@ export function LiveForm({
   onCancel,
   /** 同じアーティスト・日付の登録が既にあるかを判定する（新規登録時のみ使用） */
   isDuplicate,
+  /** 入力候補（表記ゆれを防ぐため、過去に入力した名前を提示する） */
+  artistOptions = [],
+  venueOptions = [],
 }: {
   live?: LiveWithImage;
   onSaved: () => void;
   onCancel: () => void;
   isDuplicate?: (artistName: string, liveDate: string) => boolean;
+  artistOptions?: string[];
+  venueOptions?: string[];
 }) {
   const isEdit = Boolean(live);
+  const uid = useId();
+  const artistListId = `artists-${uid}`;
+  const venueListId = `venues-${uid}`;
+  const coArtistsRef = useRef<HTMLInputElement>(null);
   const [state, action, pending] = useActionState(
     isEdit ? updateLive : createLive,
     INITIAL_LIVE_FORM_STATE,
@@ -136,6 +145,16 @@ export function LiveForm({
     formRef.current?.requestSubmit();
   };
 
+  /** 共演アーティスト欄は複数入力なので datalist が効かない。候補を選んだら末尾に足す */
+  const appendCoArtist = (name: string) => {
+    const input = coArtistsRef.current;
+    if (!input || !name) return;
+
+    const current = parseCoArtists(input.value);
+    if (!current.includes(name)) current.push(name);
+    input.value = current.join(", ");
+  };
+
   return (
     <>
       <form ref={formRef} action={action} onSubmit={handleSubmit} className="space-y-4">
@@ -161,9 +180,23 @@ export function LiveForm({
             className="field"
             required
             maxLength={100}
+            list={artistOptions.length > 0 ? artistListId : undefined}
+            autoComplete="off"
             defaultValue={live?.artist_name ?? ""}
             placeholder="例：ヨルシカ"
           />
+          {artistOptions.length > 0 ? (
+            <>
+              <datalist id={artistListId}>
+                {artistOptions.map((artist) => (
+                  <option key={artist} value={artist} />
+                ))}
+              </datalist>
+              <p className="mt-1 text-[0.65rem] text-faint">
+                登録済みの名前が候補に出ます。表記を揃えると統計が正しく集計されます。
+              </p>
+            </>
+          ) : null}
         </div>
 
         <div>
@@ -173,10 +206,30 @@ export function LiveForm({
           <input
             id="coArtists"
             name="coArtists"
+            ref={coArtistsRef}
             className="field"
+            autoComplete="off"
             defaultValue={live?.co_artists.join(", ") ?? ""}
             placeholder="例：ずっと真夜中でいいのに。, ACAね"
           />
+          {artistOptions.length > 0 ? (
+            <select
+              aria-label="登録済みのアーティストから共演者を追加"
+              className="field mt-1.5 text-xs"
+              value=""
+              onChange={(e) => {
+                appendCoArtist(e.target.value);
+                e.target.value = "";
+              }}
+            >
+              <option value="">＋ 登録済みのアーティストから追加</option>
+              {artistOptions.map((artist) => (
+                <option key={artist} value={artist}>
+                  {artist}
+                </option>
+              ))}
+            </select>
+          ) : null}
         </div>
 
         <div>
@@ -287,9 +340,18 @@ export function LiveForm({
             name="venue"
             className="field"
             maxLength={150}
+            list={venueOptions.length > 0 ? venueListId : undefined}
+            autoComplete="off"
             defaultValue={live?.venue ?? ""}
             placeholder="例：Zepp Tokyo"
           />
+          {venueOptions.length > 0 ? (
+            <datalist id={venueListId}>
+              {venueOptions.map((venue) => (
+                <option key={venue} value={venue} />
+              ))}
+            </datalist>
+          ) : null}
         </div>
 
         <div>

@@ -24,12 +24,17 @@ export function LivesClient({
   lives,
   today,
   duplicatePairs,
+  artistOptions,
+  venueOptions,
   emptyMessage,
 }: {
   lives: LiveWithImage[];
   today: string;
   /** 重複登録チェック用の「アーティスト名|日付」一覧 */
   duplicatePairs: string[];
+  /** 登録フォームの入力候補（表記ゆれ防止） */
+  artistOptions: string[];
+  venueOptions: string[];
   emptyMessage: string;
 }) {
   const view = useSyncExternalStore(subscribeView, getViewSnapshot, getViewServerSnapshot);
@@ -160,6 +165,8 @@ export function LivesClient({
               live={selected}
               onSaved={closeModal}
               onCancel={() => setMode("view")}
+              artistOptions={artistOptions}
+              venueOptions={venueOptions}
             />
           ) : (
             <DeleteLiveForm
@@ -174,7 +181,13 @@ export function LivesClient({
       {/* 新規登録 */}
       <Modal open={creating} onClose={closeCreate} title="ライブを登録" wide>
         {creating ? (
-          <LiveForm onSaved={closeCreate} onCancel={closeCreate} isDuplicate={isDuplicate} />
+          <LiveForm
+            onSaved={closeCreate}
+            onCancel={closeCreate}
+            isDuplicate={isDuplicate}
+            artistOptions={artistOptions}
+            venueOptions={venueOptions}
+          />
         ) : null}
       </Modal>
     </>

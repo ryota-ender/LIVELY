@@ -143,3 +143,13 @@ export function distinctYears(lives: Live[]): string[] {
   for (const live of lives) set.add(live.live_date.slice(0, 4));
   return [...set].sort((a, b) => b.localeCompare(a));
 }
+
+/** 入力候補用の、登録済み会場名一覧（重複なし・五十音順） */
+export function distinctVenues(lives: Live[]): string[] {
+  const set = new Set<string>();
+  for (const live of lives) {
+    const venue = live.venue?.trim();
+    if (venue) set.add(venue);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, "ja"));
+}

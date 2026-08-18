@@ -7,6 +7,7 @@ import { NextLiveBanner } from "@/components/lives/NextLiveBanner";
 import {
   applyFilters,
   distinctArtists,
+  distinctVenues,
   distinctYears,
   hasActiveFilters,
   parseFilters,
@@ -32,6 +33,7 @@ export default async function LivesPage({
   const summary = summarize(all, today);
   const upcoming = nextLive(all, today);
   const duplicatePairs = all.map((l) => `${l.artist_name}|${l.live_date}`);
+  const artistOptions = distinctArtists(all);
 
   return (
     <main>
@@ -52,7 +54,7 @@ export default async function LivesPage({
 
       <FilterPanel
         filters={filters}
-        artists={distinctArtists(all)}
+        artists={artistOptions}
         years={distinctYears(all)}
         resultCount={lives.length}
       />
@@ -61,6 +63,8 @@ export default async function LivesPage({
         lives={lives}
         today={today}
         duplicatePairs={duplicatePairs}
+        artistOptions={artistOptions}
+        venueOptions={distinctVenues(all)}
         emptyMessage={
           all.length === 0
             ? "まだライブが登録されていません。最初の 1 本を記録しましょう。"
