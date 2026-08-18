@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Section } from "@/components/Section";
+import { SetupError } from "@/components/SetupError";
 import { StatTile } from "@/components/StatTile";
 import { BarList } from "@/components/charts/BarList";
 import { ColumnChart } from "@/components/charts/ColumnChart";
 import { todayInTokyo } from "@/lib/format";
-import { fetchLives } from "@/lib/lives";
+import { loadLives } from "@/lib/lives";
 import { PREFECTURES } from "@/lib/prefectures";
 import {
   countByArtist,
@@ -23,8 +24,18 @@ export const metadata: Metadata = { title: "統計" };
 
 export default async function StatsPage() {
   const today = todayInTokyo();
-  const lives = await fetchLives();
+  const result = await loadLives();
 
+  if (!result.ok) {
+    return (
+      <main>
+        <h1 className="mb-4 text-xl font-black">統計</h1>
+        <SetupError error={result} />
+      </main>
+    );
+  }
+
+  const lives = result.data;
   const summary = summarize(lives, today);
   const prefCounts = countByPrefecture(lives);
 

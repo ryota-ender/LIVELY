@@ -8,11 +8,20 @@ const SELECT_COLUMNS =
   "id, user_id, artist_name, co_artists, live_title, live_date, open_time, start_time, venue, prefecture_code, live_type, memo, setlist, image_path, created_at, updated_at";
 
 /**
+ * 読み込み結果。DB 側の準備ができていないケース（テーブル未作成など）は
+ * 例外にせず結果として返し、画面に原因と対処法を出せるようにする。
+ * （本番の Next.js は投げた例外の内容を伏せてしまい、原因が分からなくなるため）
+ */
+export type LoadResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; message: string; code: string | null; hint: string | null };
+
+/**
  * ログインユーザーのライブ記録をすべて取得する（新しい順）。
  * 絞り込み・並び替え・集計は取得後にアプリ側で行う（1 ユーザーあたりの件数は多くないため、
  * 一覧・統計・マップで同じデータを使い回せるほうが速い）。
  */
-export async function fetchLives(): Promise<Live[]> {
+export async function loadLives(): Promise<LoadResult<Live[]>> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -21,9 +30,23 @@ export async function fetchLives(): Promise<Live[]> {
     .order("live_date", { ascending: false })
     .order("start_time", { ascending: false, nullsFirst: false });
 
-  if (error) throw new Error(`ライブの取得に失敗しました: ${error.message}`);
+  if (error) {
+    return {
+      ok: false,
+      message: error.message,
+      code: error.code ?? null,
+      hint: error.hint ?? null,
+    };
+  }
 
-  return (data ?? []).map(normalize);
+  return { ok: true, data: (data ?? []).map(normalize) };
+}
+
+/** 一覧で使う読み込み（画像の署名付き URL 付き） */
+export async function loadLivesWithImages(): Promise<LoadResult<LiveWithImage[]>> {
+  const result = await loadLives();
+  if (!result.ok) return result;
+  return { ok: true, data: await withImageUrls(result.data) };
 }
 
 /** 画像パスを署名付き URL に変換して付与する */
@@ -50,11 +73,6 @@ export async function withImageUrls(lives: Live[]): Promise<LiveWithImage[]> {
     ...live,
     image_url: live.image_path ? (urlByPath.get(live.image_path) ?? null) : null,
   }));
-}
-
-/** 一覧・マップ・統計で使う共通の読み込み */
-export async function fetchLivesWithImages(): Promise<LiveWithImage[]> {
-  return withImageUrls(await fetchLives());
 }
 
 type LiveRow = Omit<Live, "co_artists"> & { co_artists: string[] | null };

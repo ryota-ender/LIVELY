@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { SetupError } from "@/components/SetupError";
 import { StatTile } from "@/components/StatTile";
 import { FilterPanel } from "@/components/lives/FilterPanel";
 import { LivesClient } from "@/components/lives/LivesClient";
@@ -14,7 +15,7 @@ import {
   type SearchParams,
 } from "@/lib/filters";
 import { todayInTokyo } from "@/lib/format";
-import { fetchLivesWithImages } from "@/lib/lives";
+import { loadLivesWithImages } from "@/lib/lives";
 import { nextLive, summarize } from "@/lib/stats";
 
 export const metadata: Metadata = { title: "ライブ一覧" };
@@ -27,7 +28,17 @@ export default async function LivesPage({
   const filters = parseFilters(await searchParams);
   const today = todayInTokyo();
 
-  const all = await fetchLivesWithImages();
+  const result = await loadLivesWithImages();
+  if (!result.ok) {
+    return (
+      <main>
+        <h1 className="mb-4 text-xl font-black">ライブ一覧</h1>
+        <SetupError error={result} />
+      </main>
+    );
+  }
+
+  const all = result.data;
   const lives = applyFilters(all, filters, today);
 
   const summary = summarize(all, today);

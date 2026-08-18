@@ -1,17 +1,28 @@
 import type { Metadata } from "next";
 
+import { SetupError } from "@/components/SetupError";
 import { StatTile } from "@/components/StatTile";
 import { MapClient } from "@/components/map/MapClient";
 import { todayInTokyo } from "@/lib/format";
-import { fetchLives } from "@/lib/lives";
+import { loadLives } from "@/lib/lives";
 import { countByPrefecture, summarize } from "@/lib/stats";
 
 export const metadata: Metadata = { title: "制覇マップ" };
 
 export default async function MapPage() {
   const today = todayInTokyo();
-  const lives = await fetchLives();
+  const result = await loadLives();
 
+  if (!result.ok) {
+    return (
+      <main>
+        <h1 className="mb-4 text-xl font-black">都道府県 制覇マップ</h1>
+        <SetupError error={result} />
+      </main>
+    );
+  }
+
+  const lives = result.data;
   const counts = countByPrefecture(lives);
   const summary = summarize(lives, today);
   const ratePercent = Math.round(summary.conqueredRate * 100);
