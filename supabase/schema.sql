@@ -98,7 +98,12 @@ set public = excluded.public,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
 
--- 自分の user_id 名のフォルダ配下だけを読み書きできるようにする
+-- 自分の user_id 名のフォルダ配下だけを読み書きできるようにする。
+--
+-- ここから下で "must be owner of table objects" のようなエラーが出る場合は、
+-- SQL Editor ではなくダッシュボードの Storage → live-images → Policies から
+-- 同じ条件（bucket_id = 'live-images' かつ (storage.foldername(name))[1] = auth.uid()::text）で
+-- select / insert / update / delete のポリシーを作成してください。
 drop policy if exists "live_images_select_own" on storage.objects;
 create policy "live_images_select_own" on storage.objects
   for select to authenticated
