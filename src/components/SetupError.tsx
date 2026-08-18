@@ -30,9 +30,9 @@ function diagnose(error: Failure): { title: string; steps: string[] } {
     return {
       title: "テーブルへのアクセス権限がありません",
       steps: [
-        "supabase/schema.sql の「行レベルセキュリティ」の部分がすべて実行できているか確認する",
-        "SQL Editor で select policyname, cmd from pg_policies where tablename='lives'; を実行し、4 行（SELECT / INSERT / UPDATE / DELETE）返ることを確認する",
-        "足りない場合は schema.sql を再度実行する（何度実行しても問題ありません）",
+        "Supabase の SQL Editor で次を実行する： grant usage on schema public to anon, authenticated; grant select, insert, update, delete on public.lives to authenticated;",
+        "この画面を再読み込みする",
+        "直らない場合は、最新の supabase/schema.sql をもう一度すべて実行する（何度実行しても問題ありません）",
       ],
     };
   }

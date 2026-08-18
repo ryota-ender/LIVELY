@@ -57,6 +57,19 @@ create trigger lives_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- -------------------------------------------------------------
+-- ロールへの権限付与
+--
+-- Supabase では通常デフォルト権限で自動的に付くが、プロジェクトの作成時期や
+-- 実行したロールによっては付かず "permission denied for table lives" になる。
+-- 明示しておけばどの環境でも同じ結果になる。
+--
+-- ここで許可するのは「テーブルを触ってよい」ところまで。
+-- 実際にどの行を読み書きできるかは、この下の行レベルセキュリティが決める。
+-- -------------------------------------------------------------
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.lives to authenticated;
+
+-- -------------------------------------------------------------
 -- 行レベルセキュリティ（自分のライブ記録だけ読み書きできる）
 -- -------------------------------------------------------------
 alter table public.lives enable row level security;
