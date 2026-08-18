@@ -1,0 +1,192 @@
+@import "tailwindcss";
+
+@theme {
+  /* ---- ベースカラー（アイコンのネオン配色に合わせたダークテーマ） ---- */
+  --color-ink: #06030e;
+  --color-ink-soft: #0d0819;
+  --color-surface: #150e28;
+  --color-surface-2: #1d1436;
+  --color-line: #2e2350;
+  --color-line-soft: #241b42;
+
+  --color-text: #ece8f7;
+  --color-muted: #a99fc4;
+  --color-faint: #7b7196;
+
+  /* ---- アクセント ---- */
+  --color-neon-pink: #ff3ec8;
+  --color-neon-violet: #a855f7;
+  --color-neon-blue: #3ba7ff;
+  --color-neon-cyan: #34e0e8;
+
+  --color-upcoming: #3ba7ff;
+  --color-today: #ffc861;
+  --color-past: #7b7196;
+
+  --font-sans: var(--font-noto-sans-jp), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-text);
+    /* ステージ照明のような背景グロー */
+    background-image:
+      radial-gradient(60rem 40rem at 12% -10%, rgb(255 62 200 / 0.16), transparent 60%),
+      radial-gradient(55rem 38rem at 88% 0%, rgb(59 167 255 / 0.16), transparent 60%),
+      radial-gradient(70rem 50rem at 50% 110%, rgb(168 85 247 / 0.12), transparent 65%);
+    background-attachment: fixed;
+  }
+
+  /* iOS でホーム画面から起動したときにセーフエリアを避ける */
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  ::selection {
+    background-color: rgb(255 62 200 / 0.35);
+  }
+
+  /* フォームコントロールの見た目をテーマに揃える */
+  input,
+  select,
+  textarea {
+    color-scheme: dark;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.75);
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* ネオングラデーションの文字 */
+  .neon-text {
+    background-image: linear-gradient(
+      100deg,
+      var(--color-neon-pink),
+      var(--color-neon-violet) 45%,
+      var(--color-neon-blue)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* 汎用のガラス調カード */
+  .panel {
+    border-radius: 1rem;
+    border: 1px solid var(--color-line-soft);
+    background-color: rgb(21 14 40 / 0.72);
+    backdrop-filter: blur(12px);
+  }
+
+  /* 入力欄 */
+  .field {
+    width: 100%;
+    border-radius: 0.7rem;
+    border: 1px solid var(--color-line);
+    background-color: rgb(6 3 14 / 0.6);
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    color: var(--color-text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .field::placeholder {
+    color: var(--color-faint);
+  }
+
+  .field:focus {
+    border-color: var(--color-neon-violet);
+    box-shadow: 0 0 0 3px rgb(168 85 247 / 0.25);
+  }
+
+  .field-label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+
+  /* ボタン */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 0.7rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: filter 0.15s, background-color 0.15s, border-color 0.15s, opacity 0.15s;
+    cursor: pointer;
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-image: linear-gradient(100deg, var(--color-neon-pink), var(--color-neon-violet) 55%, var(--color-neon-blue));
+    color: #fff;
+    box-shadow: 0 6px 20px -8px rgb(255 62 200 / 0.7);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+
+  .btn-ghost {
+    border: 1px solid var(--color-line);
+    background-color: rgb(29 20 54 / 0.6);
+    color: var(--color-text);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--color-neon-violet);
+  }
+
+  .btn-danger {
+    border: 1px solid rgb(248 113 113 / 0.5);
+    background-color: rgb(248 113 113 / 0.12);
+    color: #fca5a5;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: rgb(248 113 113 / 0.22);
+  }
+
+  /* バッジ */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+}
+
+/* スクロールバー */
+@layer utilities {
+  .scroll-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line) transparent;
+  }
+}
