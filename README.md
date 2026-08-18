@@ -126,9 +126,30 @@ RLS ポリシーにより、`auth.uid() = user_id` の行だけ select / insert 
    （テーブル・インデックス・RLS ポリシー・画像用ストレージがまとめて作られます）
 3. **Project Settings → API** から `Project URL` と `anon public` キーを控える
 
+> **「潜在的な問題が検出されました」という警告が出たら**
+> そのまま「クエリを実行する」で問題ありません。SQL Editor は `drop` や `create or replace` と
+> いう単語を見つけると中身に関係なく警告を出します。`schema.sql` に含まれる `drop` は
+> ポリシーとトリガーの `drop ... if exists` だけで、いずれも直後に同じものを作り直しています
+> （何度実行しても同じ結果になるようにするためです）。`drop table` / `truncate` / `delete` は
+> 1 つも含まれておらず、テーブルは `create table if not exists` なので既存データは消えません。
+
 > メール確認を省いてすぐ使いたい場合は、**Authentication → Sign In / Providers → Email** の
 > 「Confirm email」をオフにしてください。オンのままだと、アカウント作成後に届くメールのリンクを
 > 開いてからログインする流れになります。
+
+> 実行後は次の SQL で結果を確認できます（**10 行**返れば完了です）。
+>
+> ```sql
+> select 'テーブル' as 種別, table_name as 名前, '' as 詳細
+>   from information_schema.tables where table_schema='public' and table_name='lives'
+> union all
+> select 'livesのRLS', policyname, cmd from pg_policies where tablename='lives'
+> union all
+> select 'バケット', id, public::text from storage.buckets where id='live-images'
+> union all
+> select 'ストレージのRLS', policyname, cmd
+>   from pg_policies where schemaname='storage' and tablename='objects' and policyname like 'live_images%';
+> ```
 
 ### 5-2. ローカルで動かす
 
