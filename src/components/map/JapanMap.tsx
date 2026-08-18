@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { JAPAN_VIEW_BOX, PREFECTURE_SHAPES } from "@/lib/japan-map";
+import { JAPAN_VIEW_BOX_PADDED, OKINAWA_INSET, PREFECTURE_SHAPES } from "@/lib/japan-map";
 
 import { LEVEL_FILLS, LEVEL_LABELS, countLevel } from "./mapScale";
 
@@ -24,18 +24,18 @@ export function JapanMap({
   return (
     <div className="relative">
       <svg
-        viewBox={JAPAN_VIEW_BOX}
+        viewBox={JAPAN_VIEW_BOX_PADDED}
         role="img"
         aria-label="都道府県別の参戦マップ"
-        className="h-auto w-full max-w-2xl mx-auto"
+        className="mx-auto h-auto w-full max-w-2xl"
         onMouseLeave={() => setHover(null)}
       >
         {/* 沖縄の枠（実際の位置ではなく左下に配置しているため） */}
         <rect
-          x="8"
-          y="404"
-          width="152"
-          height="104"
+          x={OKINAWA_INSET.x}
+          y={OKINAWA_INSET.y}
+          width={OKINAWA_INSET.width}
+          height={OKINAWA_INSET.height}
           rx="8"
           fill="none"
           stroke="#2e2350"

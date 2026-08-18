@@ -1,9 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 
 import { Modal } from "@/components/Modal";
 import type { LiveWithImage } from "@/lib/types";
+import {
+  getViewServerSnapshot,
+  getViewSnapshot,
+  setStoredView,
+  subscribeView,
+  type ViewMode,
+} from "@/lib/view-preference";
 
 import { CalendarView } from "./CalendarView";
 import { DeleteLiveForm } from "./DeleteLiveForm";
@@ -11,10 +18,7 @@ import { LiveCard } from "./LiveCard";
 import { LiveDetail } from "./LiveDetail";
 import { LiveForm } from "./LiveForm";
 
-type ViewMode = "list" | "calendar";
 type ModalMode = "view" | "edit" | "delete";
-
-const VIEW_STORAGE_KEY = "lively:view";
 
 export function LivesClient({
   lives,
@@ -28,32 +32,22 @@ export function LivesClient({
   duplicatePairs: string[];
   emptyMessage: string;
 }) {
-  const [view, setView] = useState<ViewMode>("list");
-  const [selected, setSelected] = useState<LiveWithImage | null>(null);
+  const view = useSyncExternalStore(subscribeView, getViewSnapshot, getViewServerSnapshot);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<ModalMode>("view");
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem(VIEW_STORAGE_KEY);
-    if (saved === "list" || saved === "calendar") setView(saved);
-  }, []);
+  const changeView = (next: ViewMode) => setStoredView(next);
 
-  const changeView = (next: ViewMode) => {
-    setView(next);
-    window.localStorage.setItem(VIEW_STORAGE_KEY, next);
-  };
-
-  // 一覧が更新されたら、開いている詳細も最新の内容に差し替える
-  useEffect(() => {
-    setSelected((prev) => (prev ? (lives.find((l) => l.id === prev.id) ?? null) : null));
-  }, [lives]);
+  // 一覧が更新されると自動的に最新の内容になる（削除されたら null になり、モーダルが閉じる）
+  const selected = selectedId ? (lives.find((l) => l.id === selectedId) ?? null) : null;
 
   const openDetail = (live: LiveWithImage) => {
-    setSelected(live);
+    setSelectedId(live.id);
     setMode("view");
   };
 
-  const closeModal = useCallback(() => setSelected(null), []);
+  const closeModal = useCallback(() => setSelectedId(null), []);
   const closeCreate = useCallback(() => setCreating(false), []);
 
   const isDuplicate = useCallback(
