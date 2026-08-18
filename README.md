@@ -168,6 +168,20 @@ npm run dev                  # http://localhost:3000
 3. デプロイ後、Supabase の **Authentication → URL Configuration** の
    `Site URL` に Vercel の URL を設定する（確認メールのリンク先になります）
 
+### 5-4. 旧 LivePlan のデータを取り込む（任意）
+
+旧アプリ（MySQL）に登録していたライブ記録を移行する場合は、
+[`supabase/import-liveplan-data.sql`](supabase/import-liveplan-data.sql) を使います。
+
+1. アプリでアカウントを作成しておく
+2. ファイル内の `ここにメールアドレス` を、自分のログイン用メールアドレスに書き換える
+3. SQL Editor で実行する
+
+MySQL の `live_schedules` を Postgres の `lives` に変換したもので、
+`user_id` は連番ではなく `auth.users` から引き、制覇マップ用に `prefecture_code` を
+会場名から補ってあります。同じアーティスト・タイトル・日付の行は挿入しないので、
+何度実行しても重複しません。
+
 ---
 
 ## 6. スマホアプリとして使う
