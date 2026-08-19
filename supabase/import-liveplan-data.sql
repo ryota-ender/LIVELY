@@ -4,8 +4,8 @@
 -- 【使い方】
 --   1. 先に supabase/schema.sql を実行しておく
 --   2. アプリでアカウントを作成しておく
---   3. 下の 2 箇所の 'ここにメールアドレス' を、自分のログイン用メールアドレスに書き換える
---   4. Supabase の SQL Editor で実行する
+--   3. 【手順 1】を実行して、自分のメールアドレスを確認する
+--   4. 【手順 2】の 'ここにメールアドレス' を書き換えて実行する
 --
 -- 何度実行しても重複しません（同じアーティスト・タイトル・日付の行は挿入しません）。
 --
@@ -19,21 +19,29 @@
 --   - users テーブルの admin アカウントは移行しない（認証は Supabase Auth が担当）
 -- =============================================================
 
-insert into public.lives (
-  user_id, artist_name, live_title, live_date, open_time, start_time, venue, prefecture_code, memo
-)
-select
-  u.id,
-  v.artist_name,
-  v.live_title,
-  v.live_date::date,
-  v.open_time::time,
-  v.start_time::time,
-  v.venue,
-  v.prefecture_code,
-  v.memo
-from auth.users u
-cross join (
+
+-- -------------------------------------------------------------
+-- 【手順 1】自分のメールアドレスを確認する
+--
+-- Supabase はメールアドレスを小文字で保存します。
+-- ここに表示された値をそのままコピーして、下の【手順 2】に貼ってください。
+-- -------------------------------------------------------------
+select id, email, created_at from auth.users order by created_at;
+
+
+-- -------------------------------------------------------------
+-- 【手順 2】取り込む
+--
+-- 実行すると「該当ユーザー数」と「追加件数」が返ります。
+--   該当ユーザー数 = 0 → メールアドレスが一致していません（手順 1 を確認）
+--   追加件数 = 0 かつ 該当ユーザー数 = 1 → すでに取り込み済みです
+-- -------------------------------------------------------------
+with target as (
+  select id
+    from auth.users
+   where email = 'ここにメールアドレス'
+),
+source (artist_name, live_title, live_date, open_time, start_time, venue, prefecture_code, memo) as (
   values
     ('SEKAI NO OWARI'::text, 'SUMMER SONIC 2023 OSAKA'::text, '2023-08-20'::text, '10:00:00'::text, '11:30:00'::text, '舞洲ソニックパーク'::text, '27'::text, 'ずっと真夜中でいいのに。'::text),
     ('SEKAI NO OWARI', 'SPACE SHOWER SWEET LOVE SHOWER 2023', '2023-08-26', '09:00:00', '10:30:00', '山中湖交流プラザ きらら', '19', null),
@@ -86,21 +94,48 @@ cross join (
     ('harha', 'harha one man live tour ON YOUR MARKS!', '2026-10-04', '17:00:00', '18:00:00', 'Spotify O-EAST', '13', null),
     ('THE ORAL CIGARETTES', 'BKW!! PREMIUM Party ~THINK OUT LOUD~', '2026-10-12', '15:30:00', '17:00:00', '東京ガーデンシアター', '13', null),
     ('BUMP OF CHICKEN', 'BUMP OF CHIKEN TOUR 2026-2027 Ratio Clavis', '2027-02-06', '16:00:00', '18:00:00', '東京ドーム', '13', '追加公演')
-) as v (artist_name, live_title, live_date, open_time, start_time, venue, prefecture_code, memo)
-where u.email = 'ここにメールアドレス'
-  and not exists (
+),
+inserted as (
+  insert into public.lives (
+    user_id, artist_name, live_title, live_date, open_time, start_time, venue, prefecture_code, memo
+  )
+  select
+    t.id,
+    s.artist_name,
+    s.live_title,
+    s.live_date::date,
+    s.open_time::time,
+    s.start_time::time,
+    s.venue,
+    s.prefecture_code,
+    s.memo
+  from target t
+  cross join source s
+  where not exists (
     select 1
       from public.lives l
-     where l.user_id = u.id
-       and l.artist_name = v.artist_name
-       and l.live_title = v.live_title
-       and l.live_date = v.live_date::date
-  );
+     where l.user_id = t.id
+       and l.artist_name = s.artist_name
+       and l.live_title = s.live_title
+       and l.live_date = s.live_date::date
+  )
+  returning 1
+)
+select
+  (select count(*) from target)   as 該当ユーザー数,
+  (select count(*) from inserted) as 追加件数;
 
--- 取り込み結果の確認（51 件・8 都道府県になっていれば成功）
-select count(*) as 件数, count(distinct prefecture_code) as 都道府県数
-  from public.lives
- where user_id = (select id from auth.users where email = 'ここにメールアドレス');
+
+-- -------------------------------------------------------------
+-- 【手順 3】結果を確認する（メールアドレスの書き換えは不要）
+--
+-- 取り込んだアカウントが 51 件・8 都道府県になっていれば成功です。
+-- -------------------------------------------------------------
+select u.email, count(l.id) as 件数, count(distinct l.prefecture_code) as 都道府県数
+  from auth.users u
+  left join public.lives l on l.user_id = u.id
+ group by u.email
+ order by u.email;
 
 
 -- =============================================================
@@ -116,7 +151,7 @@ select count(*) as 件数, count(distinct prefecture_code) as 都道府県数
 -- '追加公演' などの本来のメモは対象外にしています。
 --
 -- update public.lives
---    set co_artists = regexp_split_to_array(memo, '\s*[、,]\s*'),
+--    set co_artists = coalesce(regexp_split_to_array(memo, '\s*[、,]\s*'), '{}'),
 --        memo = null
 --  where user_id = (select id from auth.users where email = 'ここにメールアドレス')
 --    and memo is not null
