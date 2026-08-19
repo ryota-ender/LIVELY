@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PageHeader } from "@/components/PageHeader";
 import { Section } from "@/components/Section";
 import { SetupError } from "@/components/SetupError";
 import { StatTile } from "@/components/StatTile";
+import { ChartIcon } from "@/components/icons";
 import { BarList } from "@/components/charts/BarList";
 import { ColumnChart } from "@/components/charts/ColumnChart";
 import { todayInTokyo } from "@/lib/format";
@@ -11,7 +13,6 @@ import { loadLives } from "@/lib/lives";
 import { PREFECTURES } from "@/lib/prefectures";
 import {
   countByArtist,
-  countByMonth,
   countByPrefecture,
   countByType,
   countByVenue,
@@ -29,7 +30,7 @@ export default async function StatsPage() {
   if (!result.ok) {
     return (
       <main>
-        <h1 className="mb-4 text-xl font-black">統計</h1>
+        <PageHeader title="統計" icon={ChartIcon} />
         <SetupError error={result} />
       </main>
     );
@@ -50,20 +51,20 @@ export default async function StatsPage() {
 
   return (
     <main>
-      <h1 className="mb-4 text-xl font-black">統計</h1>
+      <PageHeader title="統計" icon={ChartIcon} />
 
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
         <StatTile label="参戦済み" value={summary.attended} unit="回" accent="pink" />
         <StatTile label="これから" value={summary.upcoming} unit="本" accent="blue" />
-        <StatTile label="登録数" value={summary.total} unit="本" accent="violet" />
-        <StatTile label="アーティスト" value={summary.artists} unit="組" accent="cyan" />
-        <StatTile label="会場" value={summary.venues} unit="カ所" accent="violet" />
+        <StatTile label="登録数" value={summary.total} unit="本" accent="pink" />
+        <StatTile label="アーティスト" value={summary.artists} unit="組" accent="violet" />
+        <StatTile label="会場" value={summary.venues} unit="カ所" accent="cyan" />
         <StatTile
           label="制覇率"
           value={Math.round(summary.conqueredRate * 100)}
           unit="%"
           hint={`${summary.conquered} / ${summary.prefectureTotal} 都道府県`}
-          accent="pink"
+          accent="cyan"
         />
       </div>
 
@@ -72,17 +73,13 @@ export default async function StatsPage() {
           <ColumnChart entries={countByYear(lives)} />
         </Section>
 
-        <Section title="月別の参戦数" description="どの季節によく行っているか">
-          <ColumnChart entries={countByMonth(lives)} />
-        </Section>
-
         <div className="grid gap-4 lg:grid-cols-2">
           <Section title="アーティスト別 TOP20" description="共演も 1 回として数えます">
-            <BarList entries={countByArtist(lives, 20)} accent="cyan" />
+            <BarList entries={countByArtist(lives, 20)} accent="violet" />
           </Section>
 
           <Section title="会場別 TOP10">
-            <BarList entries={countByVenue(lives, 10)} accent="violet" />
+            <BarList entries={countByVenue(lives, 10)} accent="cyan" />
           </Section>
         </div>
 
@@ -97,13 +94,13 @@ export default async function StatsPage() {
           >
             <BarList
               entries={prefRanking}
-              accent="pink"
+              accent="cyan"
               emptyText="都道府県が設定されたライブがまだありません。"
             />
           </Section>
 
           <Section title="種別ごとの内訳">
-            <BarList entries={countByType(lives)} accent="blue" />
+            <BarList entries={countByType(lives)} accent="pink" />
           </Section>
         </div>
       </div>

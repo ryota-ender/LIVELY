@@ -1,12 +1,11 @@
+import { PageHeader } from "@/components/PageHeader";
+import { MapPinIcon } from "@/components/icons";
 import { Skeleton, StatTilesSkeleton } from "@/components/Skeleton";
 
 export default function MapLoading() {
   return (
     <main>
-      <h1 className="mb-1 text-xl font-black">都道府県 制覇マップ</h1>
-      <p className="mb-4 text-xs text-muted">
-        参戦した都道府県が濃く光ります。色が濃いほど参戦回数が多い県です。
-      </p>
+      <PageHeader title="都道府県 制覇マップ" icon={MapPinIcon} />
 
       <div className="panel mb-4 px-4 py-4">
         <Skeleton className="h-3 w-12" />

@@ -11,6 +11,7 @@ import {
 import { prefectureName } from "@/lib/prefectures";
 import { LIVE_TYPE_LABELS, type LiveWithImage } from "@/lib/types";
 
+import { ExternalLinkIcon } from "../icons";
 import { DoorCountdown } from "./DoorCountdown";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -91,9 +92,10 @@ export function LiveDetail({ live, today }: { live: LiveWithImage; today: string
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-2 text-xs text-neon-blue hover:underline"
+                  className="ml-2 inline-flex items-center gap-1 align-middle text-xs text-neon-blue hover:underline"
                 >
-                  地図で開く ↗
+                  地図で開く
+                  <ExternalLinkIcon className="h-3 w-3" />
                 </a>
               ) : null}
             </>

@@ -1,9 +1,11 @@
+import { PageHeader } from "@/components/PageHeader";
+import { TicketIcon } from "@/components/icons";
 import { Skeleton, StatTilesSkeleton } from "@/components/Skeleton";
 
 export default function LivesLoading() {
   return (
     <main>
-      <h1 className="mb-3 text-xl font-black">ライブ一覧</h1>
+      <PageHeader title="ライブ一覧" icon={TicketIcon} />
 
       <StatTilesSkeleton />
 

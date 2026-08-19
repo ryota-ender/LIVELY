@@ -1,5 +1,15 @@
 import type { ReactNode } from "react";
 
+/**
+ * 数値タイル。
+ *
+ * accent の使い分け（画面をまたいで揃えること）:
+ *   pink   … 実績（参戦回数・登録数）
+ *   blue   … これから（予定）
+ *   cyan   … 場所（都道府県・会場）
+ *   violet … 人（アーティスト）
+ */
+
 export function StatTile({
   label,
   value,

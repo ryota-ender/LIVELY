@@ -7,6 +7,8 @@ import { buildQuery, hasActiveFilters, type LiveFilters, type SortKey } from "@/
 import { prefecturesByRegion } from "@/lib/prefectures";
 import { LIVE_TYPES, LIVE_TYPE_LABELS } from "@/lib/types";
 
+import { ChevronDownIcon, FilterIcon } from "../icons";
+
 const SORTS: Array<{ key: SortKey; label: string }> = [
   { key: "desc", label: "新しい順" },
   { key: "asc", label: "古い順" },
@@ -36,10 +38,17 @@ export function FilterPanel({
           aria-expanded={open}
           className="btn btn-ghost px-3 py-1.5 text-xs"
         >
-          絞り込み {active ? <span className="text-neon-pink">●</span> : null}
-          <span aria-hidden className="text-[0.6rem]">
-            {open ? "▲" : "▼"}
-          </span>
+          <FilterIcon className="h-3.5 w-3.5" />
+          絞り込み
+          {active ? (
+            <span
+              aria-label="絞り込み中"
+              className="h-1.5 w-1.5 rounded-full bg-neon-pink"
+            />
+          ) : null}
+          <ChevronDownIcon
+            className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+          />
         </button>
 
         <span className="text-xs text-faint">{resultCount} 件</span>

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
+import { PageHeader } from "@/components/PageHeader";
 import { SetupError } from "@/components/SetupError";
 import { StatTile } from "@/components/StatTile";
+import { TicketIcon } from "@/components/icons";
 import { FilterPanel } from "@/components/lives/FilterPanel";
 import { LivesClient } from "@/components/lives/LivesClient";
 import { NextLiveBanner } from "@/components/lives/NextLiveBanner";
@@ -32,7 +34,7 @@ export default async function LivesPage({
   if (!result.ok) {
     return (
       <main>
-        <h1 className="mb-4 text-xl font-black">ライブ一覧</h1>
+        <PageHeader title="ライブ一覧" icon={TicketIcon} />
         <SetupError error={result} />
       </main>
     );
@@ -48,7 +50,7 @@ export default async function LivesPage({
 
   return (
     <main>
-      <h1 className="mb-3 text-xl font-black">ライブ一覧</h1>
+      <PageHeader title="ライブ一覧" icon={TicketIcon} />
 
       <div className="mb-4 grid grid-cols-3 gap-2">
         <StatTile label="参戦済み" value={summary.attended} unit="回" accent="pink" />

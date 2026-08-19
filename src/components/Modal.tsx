@@ -2,6 +2,8 @@
 
 import { useEffect, type ReactNode } from "react";
 
+import { CloseIcon } from "./icons";
+
 export function Modal({
   open,
   onClose,
@@ -58,9 +60,9 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="閉じる"
-            className="ml-auto rounded-lg px-2 py-1 text-xl leading-none text-faint transition hover:bg-white/10 hover:text-text"
+            className="ml-auto rounded-lg p-1.5 text-faint transition hover:bg-white/10 hover:text-text"
           >
-            ×
+            <CloseIcon className="h-4.5 w-4.5" />
           </button>
         </div>
 

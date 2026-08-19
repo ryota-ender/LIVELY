@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
+import { PageHeader } from "@/components/PageHeader";
 import { SetupError } from "@/components/SetupError";
 import { StatTile } from "@/components/StatTile";
+import { MapPinIcon } from "@/components/icons";
 import { MapClient } from "@/components/map/MapClient";
 import { todayInTokyo } from "@/lib/format";
 import { loadLives } from "@/lib/lives";
@@ -16,7 +18,7 @@ export default async function MapPage() {
   if (!result.ok) {
     return (
       <main>
-        <h1 className="mb-4 text-xl font-black">都道府県 制覇マップ</h1>
+        <PageHeader title="都道府県 制覇マップ" icon={MapPinIcon} />
         <SetupError error={result} />
       </main>
     );
@@ -29,10 +31,11 @@ export default async function MapPage() {
 
   return (
     <main>
-      <h1 className="mb-1 text-xl font-black">都道府県 制覇マップ</h1>
-      <p className="mb-4 text-xs text-muted">
-        参戦した都道府県が濃く光ります。色が濃いほど参戦回数が多い県です。
-      </p>
+      <PageHeader
+        title="都道府県 制覇マップ"
+        description="参戦した都道府県が濃く光ります。色が濃いほど参戦回数が多い県です。"
+        icon={MapPinIcon}
+      />
 
       <div className="panel mb-4 px-4 py-4">
         <div className="flex items-end justify-between gap-3">

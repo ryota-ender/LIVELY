@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 
 import { liveStatus } from "@/lib/format";
+
+import { ChevronLeftIcon, ChevronRightIcon } from "../icons";
 import type { LiveWithImage } from "@/lib/types";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -65,9 +67,9 @@ export function CalendarView({
           type="button"
           onClick={() => shift(-1)}
           aria-label="前の月"
-          className="btn btn-ghost px-2.5 py-1"
+          className="btn btn-ghost p-1.5"
         >
-          ‹
+          <ChevronLeftIcon className="h-4 w-4" />
         </button>
         <span className="min-w-28 text-center text-sm font-bold">
           {y}年 {m}月
@@ -76,9 +78,9 @@ export function CalendarView({
           type="button"
           onClick={() => shift(1)}
           aria-label="次の月"
-          className="btn btn-ghost px-2.5 py-1"
+          className="btn btn-ghost p-1.5"
         >
-          ›
+          <ChevronRightIcon className="h-4 w-4" />
         </button>
         <button type="button" onClick={goToday} className="btn btn-ghost ml-auto px-3 py-1 text-xs">
           今月

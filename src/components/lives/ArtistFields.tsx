@@ -2,8 +2,10 @@
 
 import { useRef, useState } from "react";
 
+import { CloseIcon, PlusIcon } from "../icons";
+
 /**
- * アーティストの入力欄。既定は 1 行で、「＋ アーティストを追加」で行が増える。
+ * アーティストの入力欄。既定は 1 行で、「アーティストを追加」で行が増える。
  *
  * 1 行目が name="artistName"（メインアーティスト）、
  * 2 行目以降が name="coArtists"（共演アーティスト）として送信される。
@@ -72,9 +74,9 @@ export function ArtistFields({
                 type="button"
                 onClick={() => remove(row.id)}
                 aria-label={`${row.value || `${index + 1} 組目`}を削除`}
-                className="btn btn-ghost shrink-0 px-2.5 py-1.5 text-base leading-none text-faint"
+                className="btn btn-ghost shrink-0 p-2 text-faint"
               >
-                ×
+                <CloseIcon className="h-3.5 w-3.5" />
               </button>
             ) : null}
           </div>
@@ -82,7 +84,8 @@ export function ArtistFields({
       </div>
 
       <button type="button" onClick={add} className="btn btn-ghost mt-2 w-full text-xs">
-        ＋ アーティストを追加
+        <PlusIcon className="h-3.5 w-3.5" />
+        アーティストを追加
       </button>
 
       {options.length > 0 ? (

@@ -62,16 +62,6 @@ export function countByYear(lives: Live[]): CountEntry[] {
     .map(([key, count]) => ({ key, label: `${key}年`, count }));
 }
 
-/** 月別の参戦数（1〜12月、0 件の月も含む） */
-export function countByMonth(lives: Live[]): CountEntry[] {
-  const counts = new Array(12).fill(0) as number[];
-  for (const live of lives) {
-    const month = Number(live.live_date.slice(5, 7));
-    if (month >= 1 && month <= 12) counts[month - 1] += 1;
-  }
-  return counts.map((count, i) => ({ key: String(i + 1), label: `${i + 1}月`, count }));
-}
-
 /** アーティスト別の参戦数（多い順）。共演アーティストも 1 回としてカウントする。 */
 export function countByArtist(lives: Live[], limit = 20): CountEntry[] {
   const map = new Map<string, number>();

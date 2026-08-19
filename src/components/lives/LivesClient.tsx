@@ -3,6 +3,7 @@
 import { useCallback, useState, useSyncExternalStore } from "react";
 
 import { Modal } from "@/components/Modal";
+import { PlusIcon, TicketIcon } from "@/components/icons";
 import type { LiveWithImage } from "@/lib/types";
 import {
   getViewServerSnapshot,
@@ -92,21 +93,23 @@ export function LivesClient({
           onClick={() => setCreating(true)}
           className="btn btn-primary ml-auto hidden sm:inline-flex"
         >
-          ＋ 新規登録
+          <PlusIcon className="h-4 w-4" />
+          新規登録
         </button>
       </div>
 
       {view === "list" ? (
         lives.length === 0 ? (
-          <div className="panel px-6 py-14 text-center">
-            <p className="text-3xl">🎫</p>
-            <p className="mt-3 text-sm text-muted">{emptyMessage}</p>
+          <div className="panel flex flex-col items-center px-6 py-14 text-center">
+            <TicketIcon className="h-10 w-10 text-line" />
+            <p className="mt-4 text-sm text-muted">{emptyMessage}</p>
             <button
               type="button"
               onClick={() => setCreating(true)}
               className="btn btn-primary mt-5"
             >
-              ＋ ライブを登録する
+              <PlusIcon className="h-4 w-4" />
+              ライブを登録する
             </button>
           </div>
         ) : (
@@ -125,10 +128,10 @@ export function LivesClient({
         type="button"
         onClick={() => setCreating(true)}
         aria-label="ライブを新規登録"
-        className="btn btn-primary fixed right-5 z-40 h-14 w-14 rounded-full !p-0 text-2xl shadow-xl sm:hidden"
+        className="btn btn-primary fixed right-5 z-40 h-14 w-14 rounded-full !p-0 shadow-xl sm:hidden"
         style={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }}
       >
-        ＋
+        <PlusIcon className="h-6 w-6" />
       </button>
 
       {/* 詳細 / 編集 / 削除 */}

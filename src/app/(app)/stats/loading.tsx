@@ -1,9 +1,11 @@
+import { PageHeader } from "@/components/PageHeader";
+import { ChartIcon } from "@/components/icons";
 import { Skeleton } from "@/components/Skeleton";
 
 export default function StatsLoading() {
   return (
     <main>
-      <h1 className="mb-4 text-xl font-black">統計</h1>
+      <PageHeader title="統計" icon={ChartIcon} />
 
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {Array.from({ length: 6 }, (_, i) => (

@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { ChartIcon, MapPinIcon, TicketIcon } from "./icons";
+
 export const NAV_ITEMS = [
-  { href: "/lives", label: "ライブ", icon: "🎫" },
-  { href: "/map", label: "制覇マップ", icon: "🗾" },
-  { href: "/stats", label: "統計", icon: "📊" },
+  { href: "/lives", label: "ライブ", Icon: TicketIcon },
+  { href: "/map", label: "制覇マップ", Icon: MapPinIcon },
+  { href: "/stats", label: "統計", Icon: ChartIcon },
 ] as const;
 
 function useIsActive() {
@@ -62,9 +64,7 @@ export function BottomNav() {
                   active ? "text-neon-pink" : "text-faint"
                 }`}
               >
-                <span aria-hidden className="text-lg leading-none">
-                  {item.icon}
-                </span>
+                <item.Icon className="h-5 w-5" />
                 {item.label}
               </Link>
             </li>
