@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { parseCoArtists, type LiveFormState } from "@/lib/live-form-state";
+import type { LiveFormState } from "@/lib/live-form-state";
 import { isPrefectureCode } from "@/lib/prefectures";
 import { IMAGE_BUCKET } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
@@ -47,6 +47,20 @@ function parseForm(formData: FormData): { values: LiveValues } | { error: string
 
   if (!artistName) return { error: "アーティスト名を入力してください。" };
   if (artistName.length > 100) return { error: "アーティスト名は 100 文字以内で入力してください。" };
+
+  // 共演アーティストは同名の入力欄が複数あるので getAll で受け取る。
+  // 空欄・メインとの重複・共演どうしの重複は落とす。
+  const coArtists = [
+    ...new Set(
+      formData
+        .getAll("coArtists")
+        .map((value) => String(value).trim())
+        .filter((value) => value !== "" && value !== artistName),
+    ),
+  ];
+  if (coArtists.some((name) => name.length > 100)) {
+    return { error: "アーティスト名は 100 文字以内で入力してください。" };
+  }
   if (!liveTitle) return { error: "ライブタイトルを入力してください。" };
   if (liveTitle.length > 150) return { error: "ライブタイトルは 150 文字以内で入力してください。" };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(liveDate)) return { error: "開催日を入力してください。" };
@@ -76,7 +90,7 @@ function parseForm(formData: FormData): { values: LiveValues } | { error: string
   return {
     values: {
       artist_name: artistName,
-      co_artists: parseCoArtists(str(formData, "coArtists")),
+      co_artists: coArtists,
       live_title: liveTitle,
       live_date: liveDate,
       open_time: nullable(openTime),

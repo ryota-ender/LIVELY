@@ -3,12 +3,14 @@
 import { useActionState, useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { createLive, updateLive } from "@/app/(app)/lives/actions";
-import { INITIAL_LIVE_FORM_STATE, parseCoArtists } from "@/lib/live-form-state";
+import { INITIAL_LIVE_FORM_STATE } from "@/lib/live-form-state";
 import { IMAGE_BUCKET } from "@/lib/storage";
 import { toTimeInputValue } from "@/lib/format";
 import { prefecturesByRegion } from "@/lib/prefectures";
 import { createClient } from "@/lib/supabase/client";
 import { LIVE_TYPES, LIVE_TYPE_LABELS, type LiveWithImage } from "@/lib/types";
+
+import { ArtistFields } from "./ArtistFields";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -33,7 +35,6 @@ export function LiveForm({
   const uid = useId();
   const artistListId = `artists-${uid}`;
   const venueListId = `venues-${uid}`;
-  const coArtistsRef = useRef<HTMLInputElement>(null);
   const [state, action, pending] = useActionState(
     isEdit ? updateLive : createLive,
     INITIAL_LIVE_FORM_STATE,
@@ -145,16 +146,6 @@ export function LiveForm({
     formRef.current?.requestSubmit();
   };
 
-  /** 共演アーティスト欄は複数入力なので datalist が効かない。候補を選んだら末尾に足す */
-  const appendCoArtist = (name: string) => {
-    const input = coArtistsRef.current;
-    if (!input || !name) return;
-
-    const current = parseCoArtists(input.value);
-    if (!current.includes(name)) current.push(name);
-    input.value = current.join(", ");
-  };
-
   return (
     <>
       <form ref={formRef} action={action} onSubmit={handleSubmit} className="space-y-4">
@@ -170,67 +161,11 @@ export function LiveForm({
           </p>
         ) : null}
 
-        <div>
-          <label className="field-label" htmlFor="artistName">
-            アーティスト名（メイン）<span className="text-neon-pink">*</span>
-          </label>
-          <input
-            id="artistName"
-            name="artistName"
-            className="field"
-            required
-            maxLength={100}
-            list={artistOptions.length > 0 ? artistListId : undefined}
-            autoComplete="off"
-            defaultValue={live?.artist_name ?? ""}
-            placeholder="例：ヨルシカ"
-          />
-          {artistOptions.length > 0 ? (
-            <>
-              <datalist id={artistListId}>
-                {artistOptions.map((artist) => (
-                  <option key={artist} value={artist} />
-                ))}
-              </datalist>
-              <p className="mt-1 text-[0.65rem] text-faint">
-                登録済みの名前が候補に出ます。表記を揃えると統計が正しく集計されます。
-              </p>
-            </>
-          ) : null}
-        </div>
-
-        <div>
-          <label className="field-label" htmlFor="coArtists">
-            共演アーティスト <span className="font-normal text-faint">（カンマ区切り）</span>
-          </label>
-          <input
-            id="coArtists"
-            name="coArtists"
-            ref={coArtistsRef}
-            className="field"
-            autoComplete="off"
-            defaultValue={live?.co_artists.join(", ") ?? ""}
-            placeholder="例：ずっと真夜中でいいのに。, ACAね"
-          />
-          {artistOptions.length > 0 ? (
-            <select
-              aria-label="登録済みのアーティストから共演者を追加"
-              className="field mt-1.5 text-xs"
-              value=""
-              onChange={(e) => {
-                appendCoArtist(e.target.value);
-                e.target.value = "";
-              }}
-            >
-              <option value="">＋ 登録済みのアーティストから追加</option>
-              {artistOptions.map((artist) => (
-                <option key={artist} value={artist}>
-                  {artist}
-                </option>
-              ))}
-            </select>
-          ) : null}
-        </div>
+        <ArtistFields
+          defaultArtists={live ? [live.artist_name, ...live.co_artists] : []}
+          options={artistOptions}
+          listId={artistListId}
+        />
 
         <div>
           <label className="field-label" htmlFor="liveTitle">
