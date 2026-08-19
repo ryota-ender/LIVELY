@@ -149,3 +149,24 @@ export function ImageIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** 保存（ダウンロード） */
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3.5v11M7.5 10L12 14.5 16.5 10" />
+      <path d="M4.5 17v1.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V17" />
+    </Icon>
+  );
+}
+
+/** 共有 */
+export function ShareIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3.5v11" />
+      <path d="M8 7.5L12 3.5l4 4" />
+      <path d="M4.5 14v4.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V14" />
+    </Icon>
+  );
+}

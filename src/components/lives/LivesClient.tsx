@@ -3,7 +3,7 @@
 import { useCallback, useState, useSyncExternalStore } from "react";
 
 import { Modal } from "@/components/Modal";
-import { PlusIcon, TicketIcon } from "@/components/icons";
+import { ImageIcon, PlusIcon, TicketIcon } from "@/components/icons";
 import type { LiveWithImage } from "@/lib/types";
 import {
   getViewServerSnapshot,
@@ -18,6 +18,7 @@ import { DeleteLiveForm } from "./DeleteLiveForm";
 import { LiveCard } from "./LiveCard";
 import { LiveDetail } from "./LiveDetail";
 import { LiveForm } from "./LiveForm";
+import { ShareImageDialog } from "./ShareImageDialog";
 
 type ModalMode = "view" | "edit" | "delete";
 
@@ -27,6 +28,7 @@ export function LivesClient({
   duplicatePairs,
   artistOptions,
   venueOptions,
+  shareYears,
   emptyMessage,
 }: {
   lives: LiveWithImage[];
@@ -36,12 +38,15 @@ export function LivesClient({
   /** 登録フォームの入力候補（表記ゆれ防止） */
   artistOptions: string[];
   venueOptions: string[];
+  /** 画像書き出しで選べる年 */
+  shareYears: string[];
   emptyMessage: string;
 }) {
   const view = useSyncExternalStore(subscribeView, getViewSnapshot, getViewServerSnapshot);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<ModalMode>("view");
   const [creating, setCreating] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const changeView = (next: ViewMode) => setStoredView(next);
 
@@ -55,6 +60,7 @@ export function LivesClient({
 
   const closeModal = useCallback(() => setSelectedId(null), []);
   const closeCreate = useCallback(() => setCreating(false), []);
+  const closeShare = useCallback(() => setSharing(false), []);
 
   const isDuplicate = useCallback(
     (artistName: string, liveDate: string) => duplicatePairs.includes(`${artistName}|${liveDate}`),
@@ -90,8 +96,18 @@ export function LivesClient({
 
         <button
           type="button"
+          onClick={() => setSharing(true)}
+          className="btn btn-ghost ml-auto"
+          title="参戦履歴・参戦予定を画像で書き出す"
+        >
+          <ImageIcon className="h-4 w-4" />
+          <span className="hidden sm:inline">画像で書き出す</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setCreating(true)}
-          className="btn btn-primary ml-auto hidden sm:inline-flex"
+          className="btn btn-primary hidden sm:inline-flex"
         >
           <PlusIcon className="h-4 w-4" />
           新規登録
@@ -180,6 +196,14 @@ export function LivesClient({
           )
         ) : null}
       </Modal>
+
+      {/* 画像で書き出す */}
+      <ShareImageDialog
+        open={sharing}
+        onClose={closeShare}
+        years={shareYears}
+        defaultYear={today.slice(0, 4)}
+      />
 
       {/* 新規登録 */}
       <Modal open={creating} onClose={closeCreate} title="ライブを登録" wide>

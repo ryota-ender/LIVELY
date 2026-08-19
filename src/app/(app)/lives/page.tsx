@@ -47,6 +47,7 @@ export default async function LivesPage({
   const upcoming = nextLive(all, today);
   const duplicatePairs = all.map((l) => `${l.artist_name}|${l.live_date}`);
   const artistOptions = distinctArtists(all);
+  const years = distinctYears(all);
 
   return (
     <main>
@@ -68,7 +69,7 @@ export default async function LivesPage({
       <FilterPanel
         filters={filters}
         artists={artistOptions}
-        years={distinctYears(all)}
+        years={years}
         resultCount={lives.length}
       />
 
@@ -78,6 +79,7 @@ export default async function LivesPage({
         duplicatePairs={duplicatePairs}
         artistOptions={artistOptions}
         venueOptions={distinctVenues(all)}
+        shareYears={years.length > 0 ? years : [today.slice(0, 4)]}
         emptyMessage={
           all.length === 0
             ? "まだライブが登録されていません。最初の 1 本を記録しましょう。"
