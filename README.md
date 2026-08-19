@@ -172,17 +172,18 @@ npm run dev                  # http://localhost:3000
 
 ### 5-4. 旧 LivePlan のデータを取り込む（任意）
 
-旧アプリ（MySQL）に登録していたライブ記録を移行する場合は、
-[`supabase/import-liveplan-data.sql`](supabase/import-liveplan-data.sql) を使います。
+旧アプリ（MySQL）に登録していたライブ記録は、`supabase/import-liveplan-data.sql` を
+SQL Editor で実行して取り込みます。
 
-1. アプリでアカウントを作成しておく
-2. ファイル内の `ここにメールアドレス` を、自分のログイン用メールアドレスに書き換える
-3. SQL Editor で実行する
+**このファイルは個人の参戦記録そのもの（いつ・どこへ行ったか）を含むため、
+リポジトリにはコミットしていません**（`.gitignore` 済み）。手元にだけ置いてください。
 
-MySQL の `live_schedules` を Postgres の `lives` に変換したもので、
-`user_id` は連番ではなく `auth.users` から引き、制覇マップ用に `prefecture_code` を
-会場名から補ってあります。同じアーティスト・タイトル・日付の行は挿入しないので、
-何度実行しても重複しません。
+変換の要点は次のとおりです。
+
+- MySQL の `live_schedules` を Postgres の `lives` へ
+- `user_id` は連番ではなく `auth.users` からメールアドレスで引く
+- 制覇マップ用に `prefecture_code` を会場名から補完
+- 同じアーティスト・タイトル・日付の行は挿入しないため、何度実行しても重複しない
 
 ---
 

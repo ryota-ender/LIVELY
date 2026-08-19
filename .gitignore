@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 個人の参戦記録が入るため、取り込み用 SQL はコミットしない
+/supabase/import-liveplan-data.sql
