@@ -2,6 +2,8 @@ import { daysBetween, formatDate, formatTime } from "@/lib/format";
 import { prefectureName } from "@/lib/prefectures";
 import type { Live } from "@/lib/types";
 
+import { DoorCountdown } from "./DoorCountdown";
+
 export function NextLiveBanner({ live, today }: { live: Live; today: string }) {
   const days = daysBetween(today, live.live_date);
   const pref = prefectureName(live.prefecture_code);
@@ -21,6 +23,11 @@ export function NextLiveBanner({ live, today }: { live: Live; today: string }) {
             </>
           )}
         </span>
+        <DoorCountdown
+          liveDate={live.live_date}
+          openTime={live.open_time}
+          startTime={live.start_time}
+        />
         <span className="text-xs text-muted">
           {live.artist_name} / {live.live_title}
         </span>

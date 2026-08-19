@@ -11,6 +11,8 @@ import {
 import { prefectureName } from "@/lib/prefectures";
 import { LIVE_TYPE_LABELS, type LiveWithImage } from "@/lib/types";
 
+import { DoorCountdown } from "./DoorCountdown";
+
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[5.5rem_1fr] gap-3 border-b border-line-soft py-2.5 last:border-b-0">
@@ -38,7 +40,14 @@ export function LiveDetail({ live, today }: { live: LiveWithImage; today: string
 
       <dl>
         <Row label="ステータス">
-          <span className={`badge ${STATUS_BADGE_CLASS[status]}`}>{STATUS_LABELS[status]}</span>
+          <span className="flex flex-wrap items-center gap-2">
+            <span className={`badge ${STATUS_BADGE_CLASS[status]}`}>{STATUS_LABELS[status]}</span>
+            <DoorCountdown
+              liveDate={live.live_date}
+              openTime={live.open_time}
+              startTime={live.start_time}
+            />
+          </span>
         </Row>
         <Row label="アーティスト">
           <span className="font-bold text-neon-cyan">{live.artist_name}</span>
