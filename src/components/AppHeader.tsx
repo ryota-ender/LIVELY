@@ -8,7 +8,7 @@ import { NavTabs } from "./NavTabs";
 export function AppHeader({ userName }: { userName: string }) {
   return (
     <header
-      className="z-30 shrink-0 border-b border-line-soft bg-ink/80 backdrop-blur-lg"
+      className="sticky top-0 z-30 border-b border-line-soft bg-ink/80 backdrop-blur-lg"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2.5">

@@ -80,6 +80,7 @@ export default async function LivesPage({
         artistOptions={artistOptions}
         venueOptions={distinctVenues(all)}
         shareYears={years.length > 0 ? years : [today.slice(0, 4)]}
+        shareIndex={all.map((l) => ({ date: l.live_date, past: l.live_date <= today }))}
         emptyMessage={
           all.length === 0
             ? "まだライブが登録されていません。最初の 1 本を記録しましょう。"

@@ -2,12 +2,6 @@ import { ImageResponse } from "next/og";
 
 import { SHARE_IMAGE_WIDTH, type ShareRow } from "@/lib/share-image";
 
-/**
- * 件数が増えたら画像を縦に伸ばして全部載せる。
- * 極端に長くなったときだけ「他 N 件」に丸める安全弁として上限を置く。
- */
-export const MAX_ROWS = 60;
-
 /** ゆったり表示（アーティストと会場で 2 行）で収まる件数。超えたら 1 行表示に切り替える */
 const ROOMY_LIMIT = 10;
 
@@ -19,10 +13,10 @@ const DENSE_ROW = 50;
 const MIN_HEIGHT = 1080;
 
 /** 件数から画像の高さを決める */
-export function shareImageHeight(rowCount: number, overflow: number): number {
+export function shareImageHeight(rowCount: number, hasPageLabel: boolean): number {
   const rowHeight = rowCount > ROOMY_LIMIT ? DENSE_ROW : ROOMY_ROW;
-  const overflowLine = overflow > 0 ? 52 : 0;
-  const content = PADDING * 2 + HEADER_HEIGHT + rowCount * rowHeight + overflowLine + 32;
+  const pageLabelHeight = hasPageLabel ? 50 : 0;
+  const content = PADDING * 2 + HEADER_HEIGHT + rowCount * rowHeight + pageLabelHeight + 32;
   return Math.max(content, MIN_HEIGHT);
 }
 
@@ -50,22 +44,24 @@ export type ShareImageInput = {
   title: string;
   badge: string;
   rows: ShareRow[];
+  /** 期間全体の件数（分割していても合計を出す） */
   total: number;
-  overflow: number;
+  page: number;
+  pageCount: number;
 };
 
 /** 参戦履歴 / 参戦予定を 1 枚の PNG にする */
 export async function renderShareImage(input: ShareImageInput): Promise<ImageResponse> {
-  const { title, badge, rows, total, overflow } = input;
+  const { title, badge, rows, total, page, pageCount } = input;
 
   const dense = rows.length > ROOMY_LIMIT;
-  const overflowText = overflow > 0 ? `他 ${overflow} 件` : "";
+  const pageLabel = pageCount > 1 ? `${page} / ${pageCount}` : "";
 
   // 画像に出る文字をすべて集めてサブセットを作る
   const usedText = [
     title,
     badge,
-    overflowText,
+    pageLabel,
     "本0123456789/・記録がありません",
     ...rows.flatMap((r) => [r.date, r.artist, r.place]),
   ].join("");
@@ -230,9 +226,18 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
             </div>
           ))}
 
-          {overflowText ? (
-            <div style={{ display: "flex", fontSize: 24, color: "#7b7196", marginTop: 14 }}>
-              {overflowText}
+          {pageLabel ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: 16,
+                fontSize: 24,
+                fontWeight: 700,
+                color: "#7b7196",
+              }}
+            >
+              {pageLabel}
             </div>
           ) : null}
 
@@ -256,7 +261,7 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
     ),
     {
       width: SHARE_IMAGE_WIDTH,
-      height: shareImageHeight(rows.length, overflow),
+      height: shareImageHeight(rows.length, pageLabel !== ""),
       fonts: [
         { name: "Noto Sans JP", data: regular, weight: 400, style: "normal" },
         { name: "Noto Sans JP", data: bold, weight: 700, style: "normal" },

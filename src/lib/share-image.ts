@@ -44,23 +44,56 @@ export function scopeLabel(scope: ShareScope): string {
   return scope === "past" ? "参戦履歴" : "参戦予定";
 }
 
-/** 期間と過去 / 未来で絞り込み、開催日の古い順に並べる */
-export function selectForShare(lives: Live[], period: SharePeriod, today: string): Live[] {
+/** 期間と過去 / 未来の条件に合うか */
+export function matchesSharePeriod(date: string, isPast: boolean, period: SharePeriod): boolean {
   const { year, fromMonth, toMonth } = period;
 
+  if (!date.startsWith(`${year}-`)) return false;
+
+  if (fromMonth !== null) {
+    const month = Number(date.slice(5, 7));
+    if (month < fromMonth || month > (toMonth ?? fromMonth)) return false;
+  }
+
+  return period.scope === "past" ? isPast : !isPast;
+}
+
+/** 期間と過去 / 未来で絞り込み、開催日の古い順に並べる */
+export function selectForShare(lives: Live[], period: SharePeriod, today: string): Live[] {
   return lives
-    .filter((live) => {
-      if (!live.live_date.startsWith(`${year}-`)) return false;
-
-      if (fromMonth !== null) {
-        const month = Number(live.live_date.slice(5, 7));
-        if (month < fromMonth || month > (toMonth ?? fromMonth)) return false;
-      }
-
-      const isPast = liveStatus(live.live_date, today) === "past";
-      return period.scope === "past" ? isPast : !isPast;
-    })
+    .filter((live) =>
+      matchesSharePeriod(live.live_date, liveStatus(live.live_date, today) === "past", period),
+    )
     .sort((a, b) => a.live_date.localeCompare(b.live_date));
+}
+
+/** 画面側で件数を数えるための最小限の一覧 */
+export type ShareIndexEntry = { date: string; past: boolean };
+
+export function countForShare(index: ShareIndexEntry[], period: SharePeriod): number {
+  return index.filter((item) => matchesSharePeriod(item.date, item.past, period)).length;
+}
+
+/**
+ * この件数を超えたら画像を 2 枚に分ける。
+ * 1 枚が縦に長くなりすぎると SNS で縮小されて読めなくなるため。
+ */
+export const SPLIT_THRESHOLD = 60;
+
+/** 何枚に分けるか */
+export function sharePageCount(total: number): number {
+  return total > SPLIT_THRESHOLD ? 2 : 1;
+}
+
+/**
+ * 指定ページ分を切り出す。
+ * 2 枚に分けるときはちょうど半々にし、奇数なら 1 枚目を 1 件多くする。
+ */
+export function sliceForPage<T>(items: T[], page: number): T[] {
+  if (sharePageCount(items.length) === 1) return items;
+
+  const first = Math.ceil(items.length / 2);
+  return page >= 2 ? items.slice(first) : items.slice(0, first);
 }
 
 /** 画像に載せる 1 行分 */

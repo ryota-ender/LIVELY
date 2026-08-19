@@ -4,7 +4,12 @@ import { useMemo, useState } from "react";
 
 import { Modal } from "@/components/Modal";
 import { ShareIcon } from "@/components/icons";
-import type { ShareScope } from "@/lib/share-image";
+import {
+  countForShare,
+  sharePageCount,
+  type ShareIndexEntry,
+  type ShareScope,
+} from "@/lib/share-image";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -18,12 +23,15 @@ export function ShareImageDialog({
   onClose,
   years,
   defaultYear,
+  index,
 }: {
   open: boolean;
   onClose: () => void;
   /** 選べる年（登録済みのもの） */
   years: string[];
   defaultYear: string;
+  /** 件数を数えるための最小限の一覧 */
+  index: ShareIndexEntry[];
 }) {
   const [scope, setScope] = useState<ShareScope>("past");
   const [year, setYear] = useState(defaultYear);
@@ -33,16 +41,33 @@ export function ShareImageDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const url = useMemo(() => {
+  const { urls, count } = useMemo(() => {
     const params = new URLSearchParams({ scope, year });
     if (fromMonth) {
       params.set("from", fromMonth);
       params.set("to", toMonth || fromMonth);
     }
-    return `/share?${params.toString()}`;
-  }, [scope, year, fromMonth, toMonth]);
 
-  const fileName = [
+    const matched = countForShare(index, {
+      scope,
+      year,
+      fromMonth: fromMonth ? Number(fromMonth) : null,
+      toMonth: fromMonth ? Number(toMonth || fromMonth) : null,
+    });
+
+    // 件数が多いと 1 枚が縦に長くなりすぎるので 2 枚に分ける
+    const pages = sharePageCount(matched);
+    return {
+      count: matched,
+      urls: Array.from({ length: pages }, (_, i) => {
+        const p = new URLSearchParams(params);
+        if (pages > 1) p.set("page", String(i + 1));
+        return `/share?${p.toString()}`;
+      }),
+    };
+  }, [scope, year, fromMonth, toMonth, index]);
+
+  const baseName = [
     "lively",
     scope,
     year,
@@ -50,8 +75,10 @@ export function ShareImageDialog({
     fromMonth && toMonth && toMonth !== fromMonth ? toMonth.padStart(2, "0") : null,
   ]
     .filter(Boolean)
-    .join("-")
-    .concat(".png");
+    .join("-");
+
+  const fileNameFor = (i: number) =>
+    urls.length > 1 ? `${baseName}-${i + 1}.png` : `${baseName}.png`;
 
   /** 開始月を変えたら、終了月がそれより前にならないように合わせる */
   const changeFromMonth = (value: string) => {
@@ -61,26 +88,32 @@ export function ShareImageDialog({
   };
 
   const handleSave = async () => {
+    if (count === 0) return;
     setSaving(true);
     setError(null);
     try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("画像の生成に失敗しました");
-      const blob = await response.blob();
-      const file = new File([blob], fileName, { type: "image/png" });
+      const files = await Promise.all(
+        urls.map(async (u, i) => {
+          const response = await fetch(u);
+          if (!response.ok) throw new Error("画像の生成に失敗しました");
+          return new File([await response.blob()], fileNameFor(i), { type: "image/png" });
+        }),
+      );
 
       // スマホでは共有シートを開く。使えない環境ではダウンロードする
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
+      if (navigator.canShare?.({ files })) {
+        await navigator.share({ files });
         return;
       }
 
-      const objectUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = objectUrl;
-      anchor.download = fileName;
-      anchor.click();
-      URL.revokeObjectURL(objectUrl);
+      for (const file of files) {
+        const objectUrl = URL.createObjectURL(file);
+        const anchor = document.createElement("a");
+        anchor.href = objectUrl;
+        anchor.download = file.name;
+        anchor.click();
+        URL.revokeObjectURL(objectUrl);
+      }
     } catch (err) {
       // 共有シートを閉じただけの場合はエラー扱いしない
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -175,15 +208,21 @@ export function ShareImageDialog({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-line bg-ink/60">
-          {/* 生成した PNG をそのまま表示する（next/image の最適化は不要） */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            key={url}
-            src={url}
-            alt="書き出す画像のプレビュー"
-            className="h-auto w-full"
-          />
+        <p className="text-xs text-muted">
+          {count} 件
+          {urls.length > 1 ? (
+            <span className="ml-2 text-faint">件数が多いので 2 枚に分けます</span>
+          ) : null}
+        </p>
+
+        <div className="space-y-3">
+          {urls.map((u, i) => (
+            <div key={u} className="overflow-hidden rounded-xl border border-line bg-ink/60">
+              {/* 生成した PNG をそのまま表示する（next/image の最適化は不要） */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={u} alt={`書き出す画像のプレビュー ${i + 1}`} className="h-auto w-full" />
+            </div>
+          ))}
         </div>
 
         {error ? (
@@ -196,9 +235,9 @@ export function ShareImageDialog({
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             閉じる
           </button>
-          <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
+          <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving || count === 0}>
             <ShareIcon className="h-4 w-4" />
-            {saving ? "書き出し中…" : "保存・共有"}
+            {saving ? "書き出し中…" : urls.length > 1 ? "2 枚を保存・共有" : "保存・共有"}
           </button>
         </div>
       </div>

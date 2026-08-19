@@ -4,6 +4,7 @@ import { useCallback, useState, useSyncExternalStore } from "react";
 
 import { Modal } from "@/components/Modal";
 import { ImageIcon, PlusIcon, TicketIcon } from "@/components/icons";
+import type { ShareIndexEntry } from "@/lib/share-image";
 import type { LiveWithImage } from "@/lib/types";
 import {
   getViewServerSnapshot,
@@ -25,6 +26,7 @@ export function LivesClient({
   artistOptions,
   venueOptions,
   shareYears,
+  shareIndex,
   emptyMessage,
 }: {
   lives: LiveWithImage[];
@@ -36,6 +38,8 @@ export function LivesClient({
   venueOptions: string[];
   /** 画像書き出しで選べる年 */
   shareYears: string[];
+  /** 画像書き出しの件数計算用 */
+  shareIndex: ShareIndexEntry[];
   emptyMessage: string;
 }) {
   const view = useSyncExternalStore(subscribeView, getViewSnapshot, getViewServerSnapshot);
@@ -138,6 +142,7 @@ export function LivesClient({
         onClose={closeShare}
         years={shareYears}
         defaultYear={today.slice(0, 4)}
+        index={shareIndex}
       />
 
       {/* 新規登録 */}
