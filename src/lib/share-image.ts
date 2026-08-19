@@ -9,24 +9,34 @@ export type SharePeriod = {
   scope: ShareScope;
   /** YYYY */
   year: string;
-  /** 1〜12。未指定なら年単位 */
-  month: string | null;
+  /** 開始月 1〜12。null なら 1 年分 */
+  fromMonth: number | null;
+  /** 終了月 1〜12。fromMonth と同じなら 1 か月分 */
+  toMonth: number | null;
 };
 
-export function parseSharePeriod(
-  params: URLSearchParams,
-  fallbackYear: string,
-): SharePeriod {
-  const scope = params.get("scope") === "upcoming" ? "upcoming" : "past";
-  const year = /^\d{4}$/.test(params.get("year") ?? "") ? params.get("year")! : fallbackYear;
-  const rawMonth = params.get("month") ?? "";
-  const month = /^(1[0-2]|[1-9])$/.test(rawMonth) ? rawMonth : null;
+function parseMonth(value: string | null): number | null {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 && n <= 12 ? n : null;
+}
 
-  return { scope, year, month };
+export function parseSharePeriod(params: URLSearchParams, fallbackYear: string): SharePeriod {
+  const scope = params.get("scope") === "upcoming" ? "upcoming" : "past";
+  const rawYear = params.get("year") ?? "";
+  const year = /^\d{4}$/.test(rawYear) ? rawYear : fallbackYear;
+
+  const from = parseMonth(params.get("from"));
+  // 開始月の指定がなければ 1 年分。終了月だけ抜けていたら 1 か月分として扱う
+  const to = from === null ? null : Math.max(parseMonth(params.get("to")) ?? from, from);
+
+  return { scope, year, fromMonth: from, toMonth: to };
 }
 
 export function periodLabel(period: SharePeriod): string {
-  return period.month ? `${period.year}年 ${period.month}月` : `${period.year}年`;
+  const { year, fromMonth, toMonth } = period;
+  if (fromMonth === null) return `${year}年`;
+  if (toMonth === null || toMonth === fromMonth) return `${year}年 ${fromMonth}月`;
+  return `${year}年 ${fromMonth}〜${toMonth}月`;
 }
 
 export function scopeLabel(scope: ShareScope): string {
@@ -35,15 +45,19 @@ export function scopeLabel(scope: ShareScope): string {
 
 /** 期間と過去 / 未来で絞り込み、開催日の古い順に並べる */
 export function selectForShare(lives: Live[], period: SharePeriod, today: string): Live[] {
-  const monthPrefix = period.month
-    ? `${period.year}-${period.month.padStart(2, "0")}`
-    : period.year;
+  const { year, fromMonth, toMonth } = period;
 
   return lives
     .filter((live) => {
-      if (!live.live_date.startsWith(monthPrefix)) return false;
-      const status = liveStatus(live.live_date, today);
-      return period.scope === "past" ? status !== "upcoming" : status === "upcoming";
+      if (!live.live_date.startsWith(`${year}-`)) return false;
+
+      if (fromMonth !== null) {
+        const month = Number(live.live_date.slice(5, 7));
+        if (month < fromMonth || month > (toMonth ?? fromMonth)) return false;
+      }
+
+      const isPast = liveStatus(live.live_date, today) === "past";
+      return period.scope === "past" ? isPast : !isPast;
     })
     .sort((a, b) => a.live_date.localeCompare(b.live_date));
 }

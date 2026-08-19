@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import type { LiveFormState } from "@/lib/live-form-state";
 import { isPrefectureCode } from "@/lib/prefectures";
@@ -209,5 +210,6 @@ export async function deleteLive(prev: LiveFormState, formData: FormData): Promi
   await removeImages([current?.image_path]);
 
   revalidateAll();
-  return succeed(prev);
+  // 詳細ページから消したので一覧へ戻す
+  redirect("/lives");
 }

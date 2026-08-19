@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import {
   STATUS_BADGE_CLASS,
   STATUS_LABELS,
@@ -10,23 +12,14 @@ import {
 import { prefectureName } from "@/lib/prefectures";
 import { LIVE_TYPE_LABELS, type LiveWithImage } from "@/lib/types";
 
-export function LiveCard({
-  live,
-  today,
-  onClick,
-}: {
-  live: LiveWithImage;
-  today: string;
-  onClick: () => void;
-}) {
+export function LiveCard({ live, today }: { live: LiveWithImage; today: string }) {
   const status = liveStatus(live.live_date, today);
   const pref = prefectureName(live.prefecture_code);
   const [year, month, day] = live.live_date.split("-");
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      href={`/lives/${live.id}`}
       className="panel group flex w-full flex-col overflow-hidden text-left transition hover:border-neon-violet/60 hover:shadow-[0_0_30px_-12px_rgba(168,85,247,0.8)]"
     >
       {live.image_url ? (
@@ -36,7 +29,8 @@ export function LiveCard({
       ) : null}
 
       <div className="flex items-start gap-3 p-4">
-        <div className="shrink-0 text-center">
+        {/* 日付の桁数（8/2 と 12/25）で名前の位置がずれないよう固定幅にする */}
+        <div className="w-18 shrink-0 text-center">
           <div className="text-[0.6rem] font-semibold text-faint">{year}</div>
           <div className="neon-text text-2xl leading-none font-black">
             {Number(month)}/{Number(day)}
@@ -68,6 +62,6 @@ export function LiveCard({
           </p>
         </div>
       </div>
-    </button>
+    </Link>
   );
 }

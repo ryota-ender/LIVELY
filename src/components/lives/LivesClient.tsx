@@ -14,13 +14,9 @@ import {
 } from "@/lib/view-preference";
 
 import { CalendarView } from "./CalendarView";
-import { DeleteLiveForm } from "./DeleteLiveForm";
 import { LiveCard } from "./LiveCard";
-import { LiveDetail } from "./LiveDetail";
 import { LiveForm } from "./LiveForm";
 import { ShareImageDialog } from "./ShareImageDialog";
-
-type ModalMode = "view" | "edit" | "delete";
 
 export function LivesClient({
   lives,
@@ -43,22 +39,11 @@ export function LivesClient({
   emptyMessage: string;
 }) {
   const view = useSyncExternalStore(subscribeView, getViewSnapshot, getViewServerSnapshot);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mode, setMode] = useState<ModalMode>("view");
   const [creating, setCreating] = useState(false);
   const [sharing, setSharing] = useState(false);
 
   const changeView = (next: ViewMode) => setStoredView(next);
 
-  // 一覧が更新されると自動的に最新の内容になる（削除されたら null になり、モーダルが閉じる）
-  const selected = selectedId ? (lives.find((l) => l.id === selectedId) ?? null) : null;
-
-  const openDetail = (live: LiveWithImage) => {
-    setSelectedId(live.id);
-    setMode("view");
-  };
-
-  const closeModal = useCallback(() => setSelectedId(null), []);
   const closeCreate = useCallback(() => setCreating(false), []);
   const closeShare = useCallback(() => setSharing(false), []);
 
@@ -66,9 +51,6 @@ export function LivesClient({
     (artistName: string, liveDate: string) => duplicatePairs.includes(`${artistName}|${liveDate}`),
     [duplicatePairs],
   );
-
-  const modalTitle =
-    mode === "edit" ? "ライブを編集" : mode === "delete" ? "削除の確認" : "ライブの詳細";
 
   return (
     <>
@@ -131,12 +113,12 @@ export function LivesClient({
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {lives.map((live) => (
-              <LiveCard key={live.id} live={live} today={today} onClick={() => openDetail(live)} />
+              <LiveCard key={live.id} live={live} today={today} />
             ))}
           </div>
         )
       ) : (
-        <CalendarView lives={lives} today={today} onSelect={openDetail} />
+        <CalendarView lives={lives} today={today} />
       )}
 
       {/* スマホ用のフローティング登録ボタン */}
@@ -149,53 +131,6 @@ export function LivesClient({
       >
         <PlusIcon className="h-6 w-6" />
       </button>
-
-      {/* 詳細 / 編集 / 削除 */}
-      <Modal
-        open={selected !== null}
-        onClose={closeModal}
-        title={modalTitle}
-        wide={mode !== "delete"}
-        footer={
-          selected && mode === "view" ? (
-            <>
-              <button
-                type="button"
-                className="btn btn-danger mr-auto"
-                onClick={() => setMode("delete")}
-              >
-                削除
-              </button>
-              <button type="button" className="btn btn-ghost" onClick={closeModal}>
-                閉じる
-              </button>
-              <button type="button" className="btn btn-primary" onClick={() => setMode("edit")}>
-                編集
-              </button>
-            </>
-          ) : null
-        }
-      >
-        {selected ? (
-          mode === "view" ? (
-            <LiveDetail live={selected} today={today} />
-          ) : mode === "edit" ? (
-            <LiveForm
-              live={selected}
-              onSaved={closeModal}
-              onCancel={() => setMode("view")}
-              artistOptions={artistOptions}
-              venueOptions={venueOptions}
-            />
-          ) : (
-            <DeleteLiveForm
-              live={selected}
-              onDeleted={closeModal}
-              onCancel={() => setMode("view")}
-            />
-          )
-        ) : null}
-      </Modal>
 
       {/* 画像で書き出す */}
       <ShareImageDialog

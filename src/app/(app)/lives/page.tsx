@@ -55,7 +55,7 @@ export default async function LivesPage({
 
       <div className="mb-4 grid grid-cols-3 gap-2">
         <StatTile label="参戦済み" value={summary.attended} unit="回" accent="pink" />
-        <StatTile label="これから" value={summary.upcoming} unit="本" accent="blue" />
+        <StatTile label="参戦予定" value={summary.upcoming} unit="本" accent="blue" />
         <StatTile
           label="制覇"
           value={summary.conquered}
@@ -85,7 +85,7 @@ export default async function LivesPage({
             ? "まだライブが登録されていません。最初の 1 本を記録しましょう。"
             : hasActiveFilters(filters)
               ? "条件に合うライブがありません。絞り込みを変えてみてください。"
-              : "これから参戦するライブはありません。絞り込みの「開催状況」を切り替えると、参戦済みのライブを見られます。"
+              : "参戦予定のライブはありません。絞り込みの「開催状況」を切り替えると、参戦済みのライブを見られます。"
         }
       />
     </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState } from "react";
 
 import { deleteLive } from "@/app/(app)/lives/actions";
 import { INITIAL_LIVE_FORM_STATE } from "@/lib/live-form-state";
@@ -8,22 +8,13 @@ import type { LiveWithImage } from "@/lib/types";
 
 export function DeleteLiveForm({
   live,
-  onDeleted,
   onCancel,
 }: {
   live: LiveWithImage;
-  onDeleted: () => void;
   onCancel: () => void;
 }) {
+  // 削除に成功するとサーバー側で一覧へリダイレクトされる
   const [state, action, pending] = useActionState(deleteLive, INITIAL_LIVE_FORM_STATE);
-
-  const doneRef = useRef(false);
-  useEffect(() => {
-    if (state.submitted > 0 && state.ok && !doneRef.current) {
-      doneRef.current = true;
-      onDeleted();
-    }
-  }, [state, onDeleted]);
 
   return (
     <form action={action}>

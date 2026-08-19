@@ -55,7 +55,7 @@ export default async function StatsPage() {
 
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
         <StatTile label="参戦済み" value={summary.attended} unit="回" accent="pink" />
-        <StatTile label="これから" value={summary.upcoming} unit="本" accent="blue" />
+        <StatTile label="参戦予定" value={summary.upcoming} unit="本" accent="blue" />
         <StatTile label="登録数" value={summary.total} unit="本" accent="pink" />
         <StatTile label="アーティスト" value={summary.artists} unit="組" accent="violet" />
         <StatTile label="会場" value={summary.venues} unit="カ所" accent="cyan" />
@@ -74,7 +74,7 @@ export default async function StatsPage() {
         </Section>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <Section title="アーティスト別 TOP20" description="共演も 1 回として数えます">
+          <Section title="アーティスト別 TOP20">
             <BarList entries={countByArtist(lives, 20)} accent="violet" />
           </Section>
 

@@ -49,6 +49,31 @@ export async function loadLivesWithImages(): Promise<LoadResult<LiveWithImage[]>
   return { ok: true, data: await withImageUrls(result.data) };
 }
 
+/** 1 件だけ取得する（見つからなければ data が null） */
+export async function loadLive(id: string): Promise<LoadResult<LiveWithImage | null>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("lives")
+    .select(SELECT_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      ok: false,
+      message: error.message,
+      code: error.code ?? null,
+      hint: error.hint ?? null,
+    };
+  }
+
+  if (!data) return { ok: true, data: null };
+
+  const [live] = await withImageUrls([normalize(data)]);
+  return { ok: true, data: live };
+}
+
 /** 画像パスを署名付き URL に変換して付与する */
 export async function withImageUrls(lives: Live[]): Promise<LiveWithImage[]> {
   const paths = [...new Set(lives.map((l) => l.image_path).filter((p): p is string => Boolean(p)))];

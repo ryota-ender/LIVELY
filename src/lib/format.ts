@@ -61,7 +61,7 @@ export function liveStatus(date: string, today: string): LiveStatus {
 }
 
 export const STATUS_LABELS: Record<LiveStatus, string> = {
-  upcoming: "開催前",
+  upcoming: "参戦予定",
   today: "本日",
   past: "参戦済み",
 };

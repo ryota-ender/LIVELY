@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 
 /**
@@ -43,9 +44,9 @@ export default function AppError({
           <button type="button" onClick={reset} className="btn btn-primary">
             再試行
           </button>
-          <a href="/lives" className="btn btn-ghost">
+          <Link href="/lives" className="btn btn-ghost">
             ライブ一覧へ
-          </a>
+          </Link>
         </div>
       </div>
     </main>

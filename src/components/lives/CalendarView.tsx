@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { liveStatus } from "@/lib/format";
@@ -19,15 +20,7 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-export function CalendarView({
-  lives,
-  today,
-  onSelect,
-}: {
-  lives: LiveWithImage[];
-  today: string;
-  onSelect: (live: LiveWithImage) => void;
-}) {
+export function CalendarView({ lives, today }: { lives: LiveWithImage[]; today: string }) {
   const [cursor, setCursor] = useState(() => ({
     y: Number(today.slice(0, 4)),
     m: Number(today.slice(5, 7)),
@@ -131,17 +124,16 @@ export function CalendarView({
 
                   <div className="space-y-0.5">
                     {dayLives.map((live) => (
-                      <button
+                      <Link
                         key={live.id}
-                        type="button"
-                        onClick={() => onSelect(live)}
+                        href={`/lives/${live.id}`}
                         title={`${live.artist_name} / ${live.live_title}`}
                         className={`block w-full truncate rounded px-1 py-0.5 text-left text-[0.6rem] font-semibold transition hover:brightness-125 ${
                           DOT_CLASS[liveStatus(live.live_date, today)]
                         }`}
                       >
                         {live.artist_name}
-                      </button>
+                      </Link>
                     ))}
                   </div>
                 </>

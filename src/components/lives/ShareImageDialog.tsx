@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react";
 
 import { Modal } from "@/components/Modal";
-import { DownloadIcon, ShareIcon } from "@/components/icons";
+import { ShareIcon } from "@/components/icons";
 import { SHARE_IMAGE_SIZE, type ShareScope } from "@/lib/share-image";
+
+const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 const SCOPES: Array<{ key: ShareScope; label: string }> = [
   { key: "past", label: "参戦履歴" },
@@ -25,17 +27,38 @@ export function ShareImageDialog({
 }) {
   const [scope, setScope] = useState<ShareScope>("past");
   const [year, setYear] = useState(defaultYear);
-  const [month, setMonth] = useState(""); // 空 = 年まとめ
+  // 空 = 1 年分。from だけ選ぶと 1 か月分、to も変えると範囲になる
+  const [fromMonth, setFromMonth] = useState("");
+  const [toMonth, setToMonth] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const url = useMemo(() => {
     const params = new URLSearchParams({ scope, year });
-    if (month) params.set("month", month);
+    if (fromMonth) {
+      params.set("from", fromMonth);
+      params.set("to", toMonth || fromMonth);
+    }
     return `/share?${params.toString()}`;
-  }, [scope, year, month]);
+  }, [scope, year, fromMonth, toMonth]);
 
-  const fileName = `lively-${scope}-${year}${month ? `-${month.padStart(2, "0")}` : ""}.png`;
+  const fileName = [
+    "lively",
+    scope,
+    year,
+    fromMonth ? fromMonth.padStart(2, "0") : null,
+    fromMonth && toMonth && toMonth !== fromMonth ? toMonth.padStart(2, "0") : null,
+  ]
+    .filter(Boolean)
+    .join("-")
+    .concat(".png");
+
+  /** 開始月を変えたら、終了月がそれより前にならないように合わせる */
+  const changeFromMonth = (value: string) => {
+    setFromMonth(value);
+    if (!value) setToMonth("");
+    else if (!toMonth || Number(toMonth) < Number(value)) setToMonth(value);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -108,22 +131,47 @@ export function ShareImageDialog({
             </select>
           </div>
           <div>
-            <label className="field-label" htmlFor="share-month">
+            <label className="field-label" htmlFor="share-from">
               月
             </label>
-            <select
-              id="share-month"
-              className="field"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-            >
-              <option value="">1 年分まとめて</option>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <option key={m} value={m}>
-                  {m}月
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-1.5">
+              <select
+                id="share-from"
+                className="field"
+                value={fromMonth}
+                onChange={(e) => changeFromMonth(e.target.value)}
+              >
+                <option value="">1 年分</option>
+                {MONTHS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}月
+                  </option>
+                ))}
+              </select>
+              <span aria-hidden className="shrink-0 text-xs text-faint">
+                〜
+              </span>
+              <select
+                aria-label="終了月"
+                className="field"
+                value={toMonth}
+                disabled={!fromMonth}
+                onChange={(e) => setToMonth(e.target.value)}
+              >
+                {fromMonth ? (
+                  MONTHS.filter((m) => m >= Number(fromMonth)).map((m) => (
+                    <option key={m} value={m}>
+                      {m}月
+                    </option>
+                  ))
+                ) : (
+                  <option value="">—</option>
+                )}
+              </select>
+            </div>
+            <p className="mt-1 text-[0.65rem] text-faint">
+              同じ月を選べば 1 か月分になります。
+            </p>
           </div>
         </div>
 
@@ -151,11 +199,7 @@ export function ShareImageDialog({
             閉じる
           </button>
           <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
-            {typeof navigator !== "undefined" && "canShare" in navigator ? (
-              <ShareIcon className="h-4 w-4" />
-            ) : (
-              <DownloadIcon className="h-4 w-4" />
-            )}
+            <ShareIcon className="h-4 w-4" />
             {saving ? "書き出し中…" : "保存・共有"}
           </button>
         </div>
