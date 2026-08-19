@@ -98,9 +98,9 @@ export function FilterPanel({
               開催状況
             </label>
             <select id="f-status" name="status" defaultValue={filters.status} className="field">
-              <option value="">すべて</option>
               <option value="upcoming">これから</option>
               <option value="past">参戦済み</option>
+              <option value="all">すべて</option>
             </select>
           </div>
 

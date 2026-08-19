@@ -4,10 +4,13 @@ import { isLiveType, type Live, type LiveType } from "./types";
 
 export type SortKey = "asc" | "desc" | "artist";
 
+export type StatusFilter = "all" | "upcoming" | "past";
+
 export type LiveFilters = {
   /** アーティスト名（メイン or 共演） */
   artist: string;
-  status: "" | "upcoming" | "past";
+  /** 既定は upcoming（これから）。すべて見るときは明示的に all を指定する */
+  status: StatusFilter;
   type: "" | LiveType;
   /** YYYY */
   year: string;
@@ -18,14 +21,18 @@ export type LiveFilters = {
   sort: SortKey;
 };
 
-export const EMPTY_FILTERS: LiveFilters = {
+/**
+ * 何も指定していないときの既定。
+ * 「まだ参戦していない、これからのライブ」を開催日が近い順に出す。
+ */
+export const DEFAULT_FILTERS: LiveFilters = {
   artist: "",
-  status: "",
+  status: "upcoming",
   type: "",
   year: "",
   month: "",
   prefecture: "",
-  sort: "desc",
+  sort: "asc",
 };
 
 export type SearchParams = Record<string, string | string[] | undefined>;
@@ -45,12 +52,12 @@ export function parseFilters(searchParams: SearchParams): LiveFilters {
 
   return {
     artist: one(searchParams.artist).trim(),
-    status: status === "upcoming" || status === "past" ? status : "",
+    status: status === "all" || status === "past" ? status : DEFAULT_FILTERS.status,
     type: isLiveType(type) ? type : "",
     year: /^\d{4}$/.test(year) ? year : "",
     month: /^(1[0-2]|[1-9])$/.test(month) ? month : "",
     prefecture: isPrefectureCode(prefecture) ? prefecture : "",
-    sort: sort === "asc" || sort === "desc" || sort === "artist" ? sort : "desc",
+    sort: sort === "asc" || sort === "desc" || sort === "artist" ? sort : DEFAULT_FILTERS.sort,
   };
 }
 
@@ -58,20 +65,23 @@ export function parseFilters(searchParams: SearchParams): LiveFilters {
 export function buildQuery(filters: Partial<LiveFilters>): string {
   const params = new URLSearchParams();
   if (filters.artist) params.set("artist", filters.artist);
-  if (filters.status) params.set("status", filters.status);
+  if (filters.status && filters.status !== DEFAULT_FILTERS.status) {
+    params.set("status", filters.status);
+  }
   if (filters.type) params.set("type", filters.type);
   if (filters.year) params.set("year", filters.year);
   if (filters.month) params.set("month", filters.month);
   if (filters.prefecture) params.set("pref", filters.prefecture);
-  if (filters.sort && filters.sort !== EMPTY_FILTERS.sort) params.set("sort", filters.sort);
+  if (filters.sort && filters.sort !== DEFAULT_FILTERS.sort) params.set("sort", filters.sort);
   const q = params.toString();
   return q ? `?${q}` : "";
 }
 
+/** 既定の条件から変えられているか（絞り込みバッジと空メッセージの出し分けに使う） */
 export function hasActiveFilters(filters: LiveFilters): boolean {
   return Boolean(
     filters.artist ||
-      filters.status ||
+      filters.status !== DEFAULT_FILTERS.status ||
       filters.type ||
       filters.year ||
       filters.month ||
@@ -88,11 +98,11 @@ export function applyFilters<T extends Live>(lives: T[], filters: LiveFilters, t
   const filtered = lives.filter((live) => {
     if (filters.artist && !allArtistsOf(live).includes(filters.artist)) return false;
 
-    if (filters.status) {
-      const status = liveStatus(live.live_date, today);
-      // 「開催前」は当日を含む（当日のライブはまだこれから）
-      if (filters.status === "upcoming" && status === "past") return false;
-      if (filters.status === "past" && status !== "past") return false;
+    if (filters.status !== "all") {
+      // 「これから」は当日を含む（当日のライブはまだ参戦前）
+      const isPast = liveStatus(live.live_date, today) === "past";
+      if (filters.status === "upcoming" && isPast) return false;
+      if (filters.status === "past" && !isPast) return false;
     }
 
     if (filters.type && live.live_type !== filters.type) return false;
