@@ -1,12 +1,30 @@
 import { ImageResponse } from "next/og";
 
-import { SHARE_IMAGE_SIZE, type ShareRow } from "@/lib/share-image";
+import { SHARE_IMAGE_WIDTH, type ShareRow } from "@/lib/share-image";
 
-/** 画像に載せきる最大件数。これを超えた分は「他 N 件」にまとめる */
-export const MAX_ROWS = 16;
+/**
+ * 件数が増えたら画像を縦に伸ばして全部載せる。
+ * 極端に長くなったときだけ「他 N 件」に丸める安全弁として上限を置く。
+ */
+export const MAX_ROWS = 60;
 
 /** ゆったり表示（アーティストと会場で 2 行）で収まる件数。超えたら 1 行表示に切り替える */
-const ROOMY_LIMIT = 9;
+const ROOMY_LIMIT = 10;
+
+/** 高さの計算に使う実測値 */
+const PADDING = 72;
+const HEADER_HEIGHT = 116;
+const ROOMY_ROW = 96;
+const DENSE_ROW = 50;
+const MIN_HEIGHT = 1080;
+
+/** 件数から画像の高さを決める */
+export function shareImageHeight(rowCount: number, overflow: number): number {
+  const rowHeight = rowCount > ROOMY_LIMIT ? DENSE_ROW : ROOMY_ROW;
+  const overflowLine = overflow > 0 ? 52 : 0;
+  const content = PADDING * 2 + HEADER_HEIGHT + rowCount * rowHeight + overflowLine + 32;
+  return Math.max(content, MIN_HEIGHT);
+}
 
 /**
  * Google Fonts から、実際に使う文字だけに絞ったフォントを取ってくる。
@@ -34,26 +52,21 @@ export type ShareImageInput = {
   rows: ShareRow[];
   total: number;
   overflow: number;
-  prefectures: number;
-  artists: number;
 };
 
 /** 参戦履歴 / 参戦予定を 1 枚の PNG にする */
 export async function renderShareImage(input: ShareImageInput): Promise<ImageResponse> {
-  const { title, badge, rows, total, overflow, prefectures, artists } = input;
+  const { title, badge, rows, total, overflow } = input;
 
   const dense = rows.length > ROOMY_LIMIT;
-  const footer = `${prefectures} 都道府県 ・ ${artists} アーティスト`;
   const overflowText = overflow > 0 ? `他 ${overflow} 件` : "";
 
   // 画像に出る文字をすべて集めてサブセットを作る
   const usedText = [
-    "LIVELY",
     title,
     badge,
-    footer,
     overflowText,
-    "本0123456789/・記録がありませんライブ参戦記録",
+    "本0123456789/・記録がありません",
     ...rows.flatMap((r) => [r.date, r.artist, r.place]),
   ].join("");
 
@@ -75,41 +88,48 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
           fontFamily: "Noto Sans JP",
         }}
       >
-        {/* ヘッダー */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div
-            style={{ display: "flex",
-              fontSize: 40,
-              fontWeight: 700,
-              letterSpacing: 10,
-              color: "#ff3ec8",
-            }}
-          >
-            LIVELY
+        {/* 見出し：2026年 参戦予定 ○本 */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1 }}>
+            {title}
           </div>
           <div
             style={{
               display: "flex",
+              marginLeft: 24,
               fontSize: 28,
               fontWeight: 700,
               color: "#0d0819",
               backgroundColor: "#ff3ec8",
               borderRadius: 999,
-              padding: "10px 28px",
+              padding: "8px 24px",
             }}
           >
             {badge}
           </div>
-        </div>
-
-        {/* 期間と件数 */}
-        <div style={{ display: "flex", alignItems: "flex-end", marginTop: 30 }}>
-          <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1 }}>{title}</div>
           <div style={{ display: "flex", alignItems: "flex-end", marginLeft: "auto" }}>
-            <div style={{ display: "flex", fontSize: 92, fontWeight: 700, lineHeight: 0.9, color: "#ff3ec8" }}>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 92,
+                fontWeight: 700,
+                lineHeight: 0.85,
+                color: "#ff3ec8",
+              }}
+            >
               {total}
             </div>
-            <div style={{ display: "flex", fontSize: 34, marginLeft: 10, marginBottom: 8, color: "#a99fc4" }}>本</div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 34,
+                marginLeft: 10,
+                marginBottom: 4,
+                color: "#a99fc4",
+              }}
+            >
+              本
+            </div>
           </div>
         </div>
 
@@ -121,8 +141,6 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
             flexDirection: "column",
             marginTop: 12,
             flexGrow: 1,
-            flexShrink: 1,
-            overflow: "hidden",
           }}>
           {rows.map((row, i) => (
             <div
@@ -234,25 +252,11 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
           ) : null}
         </div>
 
-        {/* フッター */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: 20,
-            flexShrink: 0,
-            fontSize: 24,
-            color: "#a99fc4",
-          }}
-        >
-          <div style={{ display: "flex" }}>{footer}</div>
-          <div style={{ display: "flex", color: "#7b7196" }}>ライブ参戦記録</div>
-        </div>
       </div>
     ),
     {
-      ...SHARE_IMAGE_SIZE,
+      width: SHARE_IMAGE_WIDTH,
+      height: shareImageHeight(rows.length, overflow),
       fonts: [
         { name: "Noto Sans JP", data: regular, weight: 400, style: "normal" },
         { name: "Noto Sans JP", data: bold, weight: 700, style: "normal" },

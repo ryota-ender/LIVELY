@@ -4,6 +4,13 @@ import { useEffect, type ReactNode } from "react";
 
 import { CloseIcon } from "./icons";
 
+/**
+ * スクロールする領域の id。
+ * ページ全体ではなくこの要素がスクロールするので、
+ * モーダルを開いている間はここのスクロールを止める。
+ */
+export const APP_SCROLL_ID = "app-scroll";
+
 export function Modal({
   open,
   onClose,
@@ -26,12 +33,13 @@ export function Modal({
       if (e.key === "Escape") onClose();
     };
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const scroller = document.getElementById(APP_SCROLL_ID) ?? document.body;
+    const previousOverflow = scroller.style.overflow;
+    scroller.style.overflow = "hidden";
     window.addEventListener("keydown", onKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      scroller.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose]);

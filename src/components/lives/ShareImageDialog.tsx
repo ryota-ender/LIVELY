@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { Modal } from "@/components/Modal";
 import { ShareIcon } from "@/components/icons";
-import { SHARE_IMAGE_SIZE, type ShareScope } from "@/lib/share-image";
+import type { ShareScope } from "@/lib/share-image";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -182,8 +182,6 @@ export function ShareImageDialog({
             key={url}
             src={url}
             alt="書き出す画像のプレビュー"
-            width={SHARE_IMAGE_SIZE.width}
-            height={SHARE_IMAGE_SIZE.height}
             className="h-auto w-full"
           />
         </div>

@@ -1,7 +1,8 @@
 import { liveStatus } from "./format";
 import type { Live } from "./types";
 
-export const SHARE_IMAGE_SIZE = { width: 1080, height: 1350 };
+/** 画像の横幅。高さは件数に応じて伸びる（app/share/render.tsx で計算） */
+export const SHARE_IMAGE_WIDTH = 1080;
 
 export type ShareScope = "past" | "upcoming";
 

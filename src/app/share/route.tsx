@@ -32,7 +32,5 @@ export async function GET(request: Request) {
     rows,
     total: lives.length,
     overflow: lives.length - rows.length,
-    prefectures: new Set(lives.map((l) => l.prefecture_code).filter(Boolean)).size,
-    artists: new Set(lives.flatMap((l) => [l.artist_name, ...l.co_artists])).size,
   });
 }
