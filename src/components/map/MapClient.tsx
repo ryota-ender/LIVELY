@@ -8,7 +8,7 @@ import { PREFECTURES, prefecturesByRegion } from "@/lib/prefectures";
 import type { Live } from "@/lib/types";
 
 import { JapanMap } from "./JapanMap";
-import { LEVEL_FILLS, countLevel } from "./mapScale";
+import { fillFor } from "./mapScale";
 
 export function MapClient({ lives, counts }: { lives: Live[]; counts: Record<string, number> }) {
   const [selected, setSelected] = useState<string | null>(null);
@@ -135,7 +135,6 @@ export function MapClient({ lives, counts }: { lives: Live[]; counts: Record<str
                 <div className="flex flex-wrap gap-1.5">
                   {prefectures.map((pref) => {
                     const count = counts[pref.code] ?? 0;
-                    const level = countLevel(count);
                     const isSelected = selected === pref.code;
 
                     return (
@@ -147,7 +146,7 @@ export function MapClient({ lives, counts }: { lives: Live[]; counts: Record<str
                         className={`badge transition ${
                           count > 0 ? "text-white" : "text-faint"
                         } ${isSelected ? "ring-2 ring-neon-cyan" : "ring-1 ring-black/30"}`}
-                        style={{ backgroundColor: LEVEL_FILLS[level] }}
+                        style={{ backgroundColor: fillFor(count) }}
                       >
                         {pref.shortName}
                         {count > 0 ? <span className="opacity-80">{count}</span> : null}

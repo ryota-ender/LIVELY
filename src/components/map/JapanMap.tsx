@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { JAPAN_VIEW_BOX_PADDED, OKINAWA_INSET, PREFECTURE_SHAPES } from "@/lib/japan-map";
 
-import { LEVEL_FILLS, LEVEL_LABELS, countLevel } from "./mapScale";
+import { LEGEND, fillFor } from "./mapScale";
 
 type Hover = { code: string; x: number; y: number };
 
@@ -44,7 +44,6 @@ export function JapanMap({
 
         {PREFECTURE_SHAPES.map((pref) => {
           const count = counts[pref.code] ?? 0;
-          const level = countLevel(count);
           const isSelected = selectedCode === pref.code;
           const isHovered = hover?.code === pref.code;
 
@@ -52,7 +51,7 @@ export function JapanMap({
             <path
               key={pref.code}
               d={pref.path}
-              fill={LEVEL_FILLS[level]}
+              fill={fillFor(count)}
               stroke={isSelected ? "#34e0e8" : "#0d0819"}
               strokeWidth={isSelected ? 2.4 : 0.8}
               vectorEffect="non-scaling-stroke"
@@ -99,13 +98,13 @@ export function JapanMap({
       ) : null}
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
-        {LEVEL_FILLS.map((fill, level) => (
-          <span key={fill} className="flex items-center gap-1.5 text-[0.65rem] text-muted">
+        {LEGEND.map((item) => (
+          <span key={item.label} className="flex items-center gap-1.5 text-[0.7rem] text-muted">
             <span
               className="inline-block h-3 w-3 rounded-sm ring-1 ring-black/40"
-              style={{ backgroundColor: fill }}
+              style={{ backgroundColor: item.fill }}
             />
-            {LEVEL_LABELS[level]}
+            {item.label}
           </span>
         ))}
       </div>
