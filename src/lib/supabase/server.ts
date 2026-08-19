@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
@@ -6,8 +7,11 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, assertSupabaseEnv } from "./env";
 /**
  * Server Component / Server Action 用の Supabase クライアント。
  * セッションは Cookie で受け渡す。
+ *
+ * cache() で包んでいるので、同じリクエストの中で何度呼んでも
+ * クライアントは 1 つだけ作られる。
  */
-export async function createClient() {
+export const createClient = cache(async () => {
   // cookies() を先に読むことで、このリクエストが動的レンダリングであることを Next.js に伝える
   const cookieStore = await cookies();
   assertSupabaseEnv();
@@ -29,25 +33,44 @@ export async function createClient() {
       },
     },
   });
-}
+});
+
+export type SessionUser = {
+  id: string;
+  email: string | null;
+  /** 画面に出す名前。未設定ならメールアドレスのローカル部 */
+  displayName: string;
+};
 
 /**
  * ログイン中のユーザーを取得する。未ログインなら null。
- * （getUser() は Supabase の認証サーバーにトークンを検証させるため、
- *   Cookie を信用せずに済む）
+ *
+ * getUser() ではなく getClaims() を使っているのは、アクセストークンの検証を
+ * 毎回 Supabase の認証サーバーに問い合わせずに済ませるため。
+ * プロジェクトが非対称鍵（ECC / RSA）で JWT を署名していれば、
+ * 署名検証はサーバー内で完結し、画面遷移のたびの往復が 1 回減る。
+ * （対称鍵のままの場合は getUser() と同じくサーバーに問い合わせるので、
+ *   遅くなることはない）
+ *
+ * cache() により、同じリクエスト内での重複呼び出しは 1 回にまとまる。
  */
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
 
-/** ユーザーの表示名（設定されていなければメールアドレスのローカル部） */
-export function displayNameOf(user: { email?: string | null; user_metadata?: Record<string, unknown> } | null) {
-  if (!user) return "";
-  const name = user.user_metadata?.display_name;
-  if (typeof name === "string" && name.trim() !== "") return name.trim();
-  return user.email?.split("@")[0] ?? "";
-}
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (error || !claims?.sub) return null;
+
+  const email = typeof claims.email === "string" ? claims.email : null;
+  const metadata = claims.user_metadata as Record<string, unknown> | undefined;
+  const name = metadata?.display_name;
+
+  return {
+    id: claims.sub,
+    email,
+    displayName:
+      typeof name === "string" && name.trim() !== ""
+        ? name.trim()
+        : (email?.split("@")[0] ?? ""),
+  };
+});

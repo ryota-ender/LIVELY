@@ -6,7 +6,7 @@ import "./globals.css";
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
+  weight: ["400", "600", "700", "900"],
   display: "swap",
 });
 
