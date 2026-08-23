@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { buildQuery, hasActiveFilters, type LiveFilters, type SortKey } from "@/lib/filters";
-import { prefecturesByRegion } from "@/lib/prefectures";
 import { LIVE_TYPES, LIVE_TYPE_LABELS } from "@/lib/types";
 
 import { ChevronDownIcon, FilterIcon } from "../icons";
@@ -114,24 +113,6 @@ export function FilterPanel({
                 <option key={type} value={type}>
                   {LIVE_TYPE_LABELS[type]}
                 </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="field-label" htmlFor="f-pref">
-              都道府県
-            </label>
-            <select id="f-pref" name="pref" defaultValue={filters.prefecture} className="field">
-              <option value="">すべて</option>
-              {prefecturesByRegion().map(({ region, prefectures }) => (
-                <optgroup key={region} label={region}>
-                  {prefectures.map((pref) => (
-                    <option key={pref.code} value={pref.code}>
-                      {pref.name}
-                    </option>
-                  ))}
-                </optgroup>
               ))}
             </select>
           </div>

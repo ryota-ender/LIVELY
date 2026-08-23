@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
+import { ChevronDownIcon, ChevronRightIcon } from "@/components/icons";
 import { formatDateShort } from "@/lib/format";
 import { PREFECTURES, prefecturesByRegion } from "@/lib/prefectures";
 import type { Live } from "@/lib/types";
@@ -10,8 +11,12 @@ import type { Live } from "@/lib/types";
 import { JapanMap } from "./JapanMap";
 import { fillFor } from "./mapScale";
 
+/** 最初に見せる件数。これを超える分は「すべて見る」で開く */
+const PREVIEW_COUNT = 8;
+
 export function MapClient({ lives, counts }: { lives: Live[]; counts: Record<string, number> }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
 
   const livesByPref = useMemo(() => {
@@ -34,6 +39,8 @@ export function MapClient({ lives, counts }: { lives: Live[]; counts: Record<str
 
   const handleSelect = (code: string) => {
     setSelected((prev) => (prev === code ? null : code));
+    // 別の県を選び直したら、開いた状態は畳んでおく
+    setExpanded(false);
     // スマホでは地図の下の詳細が画面外になるのでスクロールする
     requestAnimationFrame(() => {
       detailRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -65,32 +72,52 @@ export function MapClient({ lives, counts }: { lives: Live[]; counts: Record<str
             {selectedLives.length > 0 ? (
               <>
                 <ul className="mt-3 divide-y divide-line-soft">
-                  {selectedLives.slice(0, 8).map((live) => (
-                    <li key={live.id} className="flex items-baseline gap-3 py-2">
-                      <span className="w-20 shrink-0 text-xs text-faint">
-                        {live.live_date.slice(0, 4)}
-                        <br />
-                        {formatDateShort(live.live_date)}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-neon-cyan">
-                          {live.artist_name}
+                  {(expanded ? selectedLives : selectedLives.slice(0, PREVIEW_COUNT)).map((live) => (
+                    <li key={live.id}>
+                      {/* ここからそのままライブの詳細へ行けるようにする */}
+                      <Link
+                        href={`/lives/${live.id}`}
+                        className="-mx-2 flex items-baseline gap-3 rounded-lg px-2 py-2 transition hover:bg-white/5"
+                      >
+                        <span className="w-20 shrink-0 text-xs text-faint">
+                          {live.live_date.slice(0, 4)}
+                          <br />
+                          {formatDateShort(live.live_date)}
                         </span>
-                        <span className="block truncate text-xs text-muted">
-                          {live.live_title}
-                          {live.venue ? ` ・ ${live.venue}` : ""}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-neon-cyan">
+                            {live.artist_name}
+                          </span>
+                          <span className="block truncate text-xs text-muted">
+                            {live.live_title}
+                            {live.venue ? ` ・ ${live.venue}` : ""}
+                          </span>
                         </span>
-                      </span>
+                        <ChevronRightIcon className="h-4 w-4 shrink-0 self-center text-faint" />
+                      </Link>
                     </li>
                   ))}
                 </ul>
 
-                <Link
-                  href={`/lives?pref=${selectedPref.code}`}
-                  className="btn btn-ghost mt-3 w-full text-xs"
-                >
-                  {selectedPref.name}のライブをすべて見る（{selectedLives.length} 件）
-                </Link>
+                {selectedLives.length > PREVIEW_COUNT ? (
+                  <button
+                    type="button"
+                    onClick={() => setExpanded((v) => !v)}
+                    className="btn btn-ghost mt-3 w-full text-xs"
+                  >
+                    {expanded ? (
+                      <>
+                        <ChevronDownIcon className="h-3.5 w-3.5 rotate-180" />
+                        表示を減らす
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDownIcon className="h-3.5 w-3.5" />
+                        すべて見る（残り {selectedLives.length - PREVIEW_COUNT} 件）
+                      </>
+                    )}
+                  </button>
+                ) : null}
               </>
             ) : (
               <p className="mt-3 text-sm text-muted">

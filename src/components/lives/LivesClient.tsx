@@ -1,20 +1,12 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useState } from "react";
 
 import { Modal } from "@/components/Modal";
 import { ImageIcon, PlusIcon, TicketIcon } from "@/components/icons";
 import type { ShareIndexEntry } from "@/lib/share-image";
 import type { LiveWithImage } from "@/lib/types";
-import {
-  getViewServerSnapshot,
-  getViewSnapshot,
-  setStoredView,
-  subscribeView,
-  type ViewMode,
-} from "@/lib/view-preference";
 
-import { CalendarView } from "./CalendarView";
 import { LiveCard } from "./LiveCard";
 import { LiveForm } from "./LiveForm";
 import { ShareImageDialog } from "./ShareImageDialog";
@@ -42,11 +34,8 @@ export function LivesClient({
   shareIndex: ShareIndexEntry[];
   emptyMessage: string;
 }) {
-  const view = useSyncExternalStore(subscribeView, getViewSnapshot, getViewServerSnapshot);
   const [creating, setCreating] = useState(false);
   const [sharing, setSharing] = useState(false);
-
-  const changeView = (next: ViewMode) => setStoredView(next);
 
   const closeCreate = useCallback(() => setCreating(false), []);
   const closeShare = useCallback(() => setSharing(false), []);
@@ -59,31 +48,10 @@ export function LivesClient({
   return (
     <>
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex rounded-xl border border-line bg-surface/60 p-0.5">
-          {(
-            [
-              { key: "list", label: "一覧" },
-              { key: "calendar", label: "カレンダー" },
-            ] as const
-          ).map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => changeView(item.key)}
-              aria-pressed={view === item.key}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                view === item.key ? "bg-white/10 text-text" : "text-faint hover:text-text"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-
         <button
           type="button"
           onClick={() => setSharing(true)}
-          className="btn btn-ghost ml-auto"
+          className="btn btn-ghost"
           title="参戦履歴・参戦予定を画像で書き出す"
         >
           <ImageIcon className="h-4 w-4" />
@@ -93,36 +61,28 @@ export function LivesClient({
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="btn btn-primary hidden sm:inline-flex"
+          className="btn btn-primary ml-auto hidden sm:inline-flex"
         >
           <PlusIcon className="h-4 w-4" />
           新規登録
         </button>
       </div>
 
-      {view === "list" ? (
-        lives.length === 0 ? (
-          <div className="panel flex flex-col items-center px-6 py-14 text-center">
-            <TicketIcon className="h-10 w-10 text-line" />
-            <p className="mt-4 text-sm text-muted">{emptyMessage}</p>
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="btn btn-primary mt-5"
-            >
-              <PlusIcon className="h-4 w-4" />
-              ライブを登録する
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {lives.map((live) => (
-              <LiveCard key={live.id} live={live} today={today} />
-            ))}
-          </div>
-        )
+      {lives.length === 0 ? (
+        <div className="panel flex flex-col items-center px-6 py-14 text-center">
+          <TicketIcon className="h-10 w-10 text-line" />
+          <p className="mt-4 text-sm text-muted">{emptyMessage}</p>
+          <button type="button" onClick={() => setCreating(true)} className="btn btn-primary mt-5">
+            <PlusIcon className="h-4 w-4" />
+            ライブを登録する
+          </button>
+        </div>
       ) : (
-        <CalendarView lives={lives} today={today} />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {lives.map((live) => (
+            <LiveCard key={live.id} live={live} today={today} />
+          ))}
+        </div>
       )}
 
       {/* スマホ用のフローティング登録ボタン */}

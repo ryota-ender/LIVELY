@@ -1,5 +1,4 @@
 import { liveStatus } from "./format";
-import { isPrefectureCode } from "./prefectures";
 import { isLiveType, type Live, type LiveType } from "./types";
 
 export type SortKey = "asc" | "desc" | "artist";
@@ -16,8 +15,6 @@ export type LiveFilters = {
   year: string;
   /** 1〜12（ゼロ埋めなし） */
   month: string;
-  /** JIS 都道府県コード */
-  prefecture: string;
   sort: SortKey;
 };
 
@@ -31,7 +28,6 @@ export const DEFAULT_FILTERS: LiveFilters = {
   type: "",
   year: "",
   month: "",
-  prefecture: "",
   sort: "asc",
 };
 
@@ -47,7 +43,6 @@ export function parseFilters(searchParams: SearchParams): LiveFilters {
   const type = one(searchParams.type);
   const year = one(searchParams.year);
   const month = one(searchParams.month);
-  const prefecture = one(searchParams.pref);
   const sort = one(searchParams.sort);
 
   return {
@@ -56,7 +51,6 @@ export function parseFilters(searchParams: SearchParams): LiveFilters {
     type: isLiveType(type) ? type : "",
     year: /^\d{4}$/.test(year) ? year : "",
     month: /^(1[0-2]|[1-9])$/.test(month) ? month : "",
-    prefecture: isPrefectureCode(prefecture) ? prefecture : "",
     sort: sort === "asc" || sort === "desc" || sort === "artist" ? sort : DEFAULT_FILTERS.sort,
   };
 }
@@ -71,7 +65,6 @@ export function buildQuery(filters: Partial<LiveFilters>): string {
   if (filters.type) params.set("type", filters.type);
   if (filters.year) params.set("year", filters.year);
   if (filters.month) params.set("month", filters.month);
-  if (filters.prefecture) params.set("pref", filters.prefecture);
   if (filters.sort && filters.sort !== DEFAULT_FILTERS.sort) params.set("sort", filters.sort);
   const q = params.toString();
   return q ? `?${q}` : "";
@@ -84,8 +77,7 @@ export function hasActiveFilters(filters: LiveFilters): boolean {
       filters.status !== DEFAULT_FILTERS.status ||
       filters.type ||
       filters.year ||
-      filters.month ||
-      filters.prefecture,
+      filters.month,
   );
 }
 
@@ -113,8 +105,6 @@ export function applyFilters<T extends Live>(lives: T[], filters: LiveFilters, t
       const mm = String(filters.month).padStart(2, "0");
       if (live.live_date.slice(5, 7) !== mm) return false;
     }
-
-    if (filters.prefecture && live.prefecture_code !== filters.prefecture) return false;
 
     return true;
   });
