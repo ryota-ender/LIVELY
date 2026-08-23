@@ -48,6 +48,12 @@
   body {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    /*
+     * メモや会場名に長い URL・英数字の連続が入っても、
+     * 途中で折り返して枠からはみ出さないようにする。
+     * anywhere は最小幅の計算にも効くので、flex / grid の中でも縮められる。
+     */
+    overflow-wrap: anywhere;
   }
 
   ::selection {

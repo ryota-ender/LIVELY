@@ -73,7 +73,7 @@ export default async function StatsPage() {
           <ColumnChart entries={countByYear(lives)} />
         </Section>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Section title="アーティスト別 TOP20">
             <BarList entries={countByArtist(lives, 20)} accent="violet" />
           </Section>
@@ -83,7 +83,7 @@ export default async function StatsPage() {
           </Section>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Section
             title="都道府県別 TOP10"
             action={

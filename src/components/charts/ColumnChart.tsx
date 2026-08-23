@@ -52,7 +52,8 @@ export function ColumnChart({
                 )}
               </div>
 
-              <span className="mt-1.5 text-[0.6rem] whitespace-nowrap text-faint">
+              {/* 長いラベルでも隣の列に重ならないよう、列幅で切る */}
+              <span className="mt-1.5 w-full truncate text-center text-[0.6rem] text-faint">
                 {entry.label}
               </span>
             </div>

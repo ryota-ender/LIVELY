@@ -50,14 +50,14 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line-soft bg-ink/85 backdrop-blur-lg sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 overflow-hidden border-t border-line-soft bg-ink/85 backdrop-blur-lg sm:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="mx-auto flex max-w-md">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.href);
           return (
-            <li key={item.href} className="flex-1">
+            <li key={item.href} className="min-w-0 flex-1">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
@@ -65,8 +65,8 @@ export function BottomNav() {
                   active ? "text-neon-pink" : "text-faint"
                 }`}
               >
-                <item.Icon className="h-5 w-5" />
-                {item.label}
+                <item.Icon className="h-5 w-5 shrink-0" />
+                <span className="w-full truncate text-center">{item.label}</span>
               </Link>
             </li>
           );

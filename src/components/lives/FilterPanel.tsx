@@ -75,7 +75,7 @@ export function FilterPanel({
         <form
           action="/lives"
           method="get"
-          className="grid gap-3 border-t border-line-soft px-4 py-4 sm:grid-cols-3"
+          className="grid grid-cols-1 gap-3 border-t border-line-soft px-4 py-4 sm:grid-cols-3"
         >
           <input type="hidden" name="sort" value={filters.sort} />
 
