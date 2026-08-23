@@ -58,7 +58,7 @@ export function ArtistSettingsForm({
             defaultValue={artist.settings?.fan_since ?? ""}
           />
           <p className="mt-1 text-[0.65rem] text-faint">
-            設定すると「応援して〇日目」が一覧に出ます。
+            設定すると「応援して 11年144日」のように経過が一覧に出ます。
           </p>
         </div>
 

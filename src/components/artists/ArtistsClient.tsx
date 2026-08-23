@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Modal } from "@/components/Modal";
 import { ExternalLinkIcon, HeartIcon, TicketIcon } from "@/components/icons";
-import type { ArtistSummary } from "@/lib/artists";
+import { formatFanDuration, type ArtistSummary } from "@/lib/artists";
 import { formatDate } from "@/lib/format";
 
 import { ArtistSettingsForm } from "./ArtistSettingsForm";
@@ -45,9 +45,9 @@ export function ArtistsClient({ artists }: { artists: ArtistSummary[] }) {
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-bold text-neon-cyan">{artist.name}</h2>
 
-              {artist.fanDays !== null ? (
+              {artist.fanDuration ? (
                 <span className="badge bg-neon-pink/15 text-neon-pink ring-1 ring-neon-pink/40">
-                  応援 {artist.fanDays.toLocaleString()} 日目
+                  応援して {formatFanDuration(artist.fanDuration)}
                 </span>
               ) : null}
 

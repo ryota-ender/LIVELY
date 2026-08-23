@@ -5,7 +5,7 @@ import { SetupError } from "@/components/SetupError";
 import { StatTile } from "@/components/StatTile";
 import { HeartIcon } from "@/components/icons";
 import { ArtistsClient } from "@/components/artists/ArtistsClient";
-import { buildArtistSummaries } from "@/lib/artists";
+import { buildArtistSummaries, formatFanDuration } from "@/lib/artists";
 import { todayInTokyo } from "@/lib/format";
 import { loadArtistSettings, loadLives } from "@/lib/lives";
 
@@ -33,14 +33,19 @@ export default async function ArtistsPage() {
   }
 
   const artists = buildArtistSummaries(livesResult.data, settingsResult.data, today);
-  const withFanSince = artists.filter((a) => a.fanDays !== null);
-  const longest = withFanSince.reduce<number>((max, a) => Math.max(max, a.fanDays ?? 0), 0);
+  const withFanSince = artists.filter((a) => a.fanDuration !== null);
+  // 通算日数がいちばん長いものを「最長の応援」として出す
+  const longest = withFanSince.reduce<(typeof withFanSince)[number] | null>(
+    (best, a) =>
+      !best || (a.fanDuration?.totalDays ?? 0) > (best.fanDuration?.totalDays ?? 0) ? a : best,
+    null,
+  );
 
   return (
     <main>
       <PageHeader
         title="アーティスト"
-        description="応援開始日を設定すると「応援して〇日目」を数えます。"
+        description="応援開始日を設定すると、そこからの経過を数えます。"
         icon={HeartIcon}
       />
 
@@ -49,8 +54,8 @@ export default async function ArtistsPage() {
         <StatTile label="応援開始日あり" value={withFanSince.length} unit="組" accent="pink" />
         <StatTile
           label="最長の応援"
-          value={longest > 0 ? longest.toLocaleString() : "—"}
-          unit={longest > 0 ? "日目" : undefined}
+          value={longest?.fanDuration ? formatFanDuration(longest.fanDuration) : "—"}
+          hint={longest?.fanDuration ? longest.name : undefined}
           accent="cyan"
         />
       </div>
