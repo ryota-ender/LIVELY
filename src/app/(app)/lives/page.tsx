@@ -17,7 +17,7 @@ import {
   type SearchParams,
 } from "@/lib/filters";
 import { todayInTokyo } from "@/lib/format";
-import { loadLivesWithImages } from "@/lib/lives";
+import { loadArtistSettings, loadLivesWithImages } from "@/lib/lives";
 import { nextLive, summarize } from "@/lib/stats";
 
 export const metadata: Metadata = { title: "ライブ一覧" };
@@ -30,7 +30,10 @@ export default async function LivesPage({
   const filters = parseFilters(await searchParams);
   const today = todayInTokyo();
 
-  const result = await loadLivesWithImages();
+  const [result, artistSettings] = await Promise.all([
+    loadLivesWithImages(),
+    loadArtistSettings(),
+  ]);
   if (!result.ok) {
     return (
       <main>
@@ -46,7 +49,13 @@ export default async function LivesPage({
   const summary = summarize(all, today);
   const upcoming = nextLive(all, today);
   const duplicatePairs = all.map((l) => `${l.artist_name}|${l.live_date}`);
-  const artistOptions = distinctArtists(all);
+  // ライブに出てくる名前 + 設定だけ作ったアーティストを候補にする
+  const artistOptions = [
+    ...new Set([
+      ...distinctArtists(all),
+      ...(artistSettings.ok ? artistSettings.data.map((a) => a.name) : []),
+    ]),
+  ].sort((a, b) => a.localeCompare(b, "ja"));
   const years = distinctYears(all);
 
   return (

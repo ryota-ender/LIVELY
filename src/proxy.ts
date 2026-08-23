@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, hasSupabaseEnv } from "@/lib/supabase/env";
 
 /** ログインしていないと開けないパス */
-const PROTECTED_PREFIXES = ["/lives", "/map", "/stats"];
+const PROTECTED_PREFIXES = ["/lives", "/artists", "/map", "/stats"];
 /** ログイン済みなら一覧に飛ばすパス */
 const AUTH_PAGES = ["/login", "/signup"];
 

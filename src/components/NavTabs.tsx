@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ChartIcon, MapPinIcon, TicketIcon } from "./icons";
+import { ChartIcon, HeartIcon, MapPinIcon, TicketIcon } from "./icons";
 
 export const NAV_ITEMS = [
   { href: "/lives", label: "ライブ", Icon: TicketIcon },
+  { href: "/artists", label: "アーティスト", Icon: HeartIcon },
   { href: "/map", label: "制覇マップ", Icon: MapPinIcon },
   { href: "/stats", label: "統計", Icon: ChartIcon },
 ] as const;

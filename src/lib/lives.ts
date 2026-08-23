@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { ArtistSettings } from "./artists";
 import { IMAGE_BUCKET, SIGNED_URL_TTL } from "./storage";
 import { createClient } from "./supabase/server";
 import type { Live, LiveWithImage } from "./types";
@@ -47,6 +48,27 @@ export async function loadLivesWithImages(): Promise<LoadResult<LiveWithImage[]>
   const result = await loadLives();
   if (!result.ok) return result;
   return { ok: true, data: await withImageUrls(result.data) };
+}
+
+/** アーティストの設定を全件取得する */
+export async function loadArtistSettings(): Promise<LoadResult<ArtistSettings[]>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("artists")
+    .select("id, user_id, name, fan_since, memo, url, created_at, updated_at")
+    .order("name");
+
+  if (error) {
+    return {
+      ok: false,
+      message: error.message,
+      code: error.code ?? null,
+      hint: error.hint ?? null,
+    };
+  }
+
+  return { ok: true, data: data ?? [] };
 }
 
 /** 1 件だけ取得する（見つからなければ data が null） */

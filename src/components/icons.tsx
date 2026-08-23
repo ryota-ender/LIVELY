@@ -170,3 +170,12 @@ export function ShareIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** アーティスト（応援） */
+export function HeartIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 20.5C7 17 3.5 14 3.5 10.25A4.25 4.25 0 0 1 12 8.4a4.25 4.25 0 0 1 8.5 1.85C20.5 14 17 17 12 20.5Z" />
+    </Icon>
+  );
+}

@@ -95,6 +95,62 @@ create policy "lives_delete_own" on public.lives
   for delete to authenticated
   using (auth.uid() = user_id);
 
+-- =============================================================
+-- アーティスト（応援開始日などの設定を持たせるためのテーブル）
+--
+-- ライブとは「名前」で結び付ける。lives 側は従来どおり artist_name /
+-- co_artists にテキストで持ち、こちらは設定を足したいアーティストだけ
+-- 行を作る（設定していないアーティストも一覧には出る）。
+-- =============================================================
+create table if not exists public.artists (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+
+  name       text not null check (char_length(name) between 1 and 100),
+  -- 応援を始めた日（「応援して何日目」の起点）
+  fan_since  date,
+  memo       text check (char_length(memo) <= 2000),
+  url        text check (char_length(url) <= 500),
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  unique (user_id, name)
+);
+
+create index if not exists artists_user_idx on public.artists (user_id, name);
+
+drop trigger if exists artists_set_updated_at on public.artists;
+create trigger artists_set_updated_at
+  before update on public.artists
+  for each row execute function public.set_updated_at();
+
+grant select, insert, update, delete on public.artists to authenticated;
+
+alter table public.artists enable row level security;
+
+drop policy if exists "artists_select_own" on public.artists;
+create policy "artists_select_own" on public.artists
+  for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "artists_insert_own" on public.artists;
+create policy "artists_insert_own" on public.artists
+  for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "artists_update_own" on public.artists;
+create policy "artists_update_own" on public.artists
+  for update to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "artists_delete_own" on public.artists;
+create policy "artists_delete_own" on public.artists
+  for delete to authenticated
+  using (auth.uid() = user_id);
+
+
 -- -------------------------------------------------------------
 -- 画像用ストレージ（非公開バケット / 署名付き URL で配信）
 -- -------------------------------------------------------------
