@@ -75,11 +75,11 @@ export function FilterPanel({
         <form
           action="/lives"
           method="get"
-          className="grid grid-cols-2 gap-3 border-t border-line-soft px-4 py-4 sm:grid-cols-3"
+          className="grid gap-3 border-t border-line-soft px-4 py-4 sm:grid-cols-3"
         >
           <input type="hidden" name="sort" value={filters.sort} />
 
-          <div className="col-span-2 sm:col-span-1">
+          <div>
             <label className="field-label" htmlFor="f-artist">
               アーティスト
             </label>
@@ -118,7 +118,7 @@ export function FilterPanel({
             </select>
           </div>
 
-          <div className="col-span-2 sm:col-span-1">
+          <div>
             <label className="field-label" htmlFor="f-pref">
               都道府県
             </label>
@@ -164,7 +164,7 @@ export function FilterPanel({
             </select>
           </div>
 
-          <div className="col-span-2 flex gap-2 sm:col-span-3">
+          <div className="flex gap-2 sm:col-span-3">
             <button type="submit" className="btn btn-primary flex-1">
               この条件で絞り込む
             </button>

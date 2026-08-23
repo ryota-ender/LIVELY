@@ -182,8 +182,9 @@ export function LiveForm({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
+        {/* 日付・時刻の入力欄は端末の UI に最低幅があるため、狭い画面では縦に並べる */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="min-w-0">
             <label className="field-label" htmlFor="liveDate">
               開催日<span className="text-neon-pink">*</span>
             </label>
@@ -196,7 +197,7 @@ export function LiveForm({
               defaultValue={live?.live_date ?? ""}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="field-label" htmlFor="liveType">
               種別
             </label>
@@ -216,8 +217,8 @@ export function LiveForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="min-w-0">
             <label className="field-label" htmlFor="openTime">
               開場時間
             </label>
@@ -229,7 +230,7 @@ export function LiveForm({
               defaultValue={toTimeInputValue(live?.open_time)}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="field-label" htmlFor="startTime">
               開演時間
             </label>

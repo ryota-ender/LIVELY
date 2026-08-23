@@ -145,7 +145,7 @@ export function ShareImageDialog({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="field-label" htmlFor="share-year">
               年
