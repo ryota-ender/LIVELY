@@ -22,6 +22,8 @@ Java / JSP / Tomcat / MySQL で作っていた **LivePlan** を、Next.js + Supa
 | **都道府県 制覇マップ** | 参戦した都道府県が光る日本地図。県をタップするとその県のライブが出て、そのまま詳細へ移動できる |
 | 統計 | 年別・月別・アーティスト別・会場別・都道府県別・種別のグラフ |
 | 次のライブまで | 直近のライブまでの残り日数を一覧の先頭に表示 |
+| 聴いた曲ランキング | 参戦済みライブのセトリから、これまでに聴いた曲を回数順に並べる。対バン・フェスでは共演者の曲を正しく振り分ける |
+| コンプリートブック | アーティストの全曲を取り込み、どの曲をライブで聴いたかを一覧にする（聴いた曲はジャケットがカラー、まだの曲は色抜き）。コンプリート率も表示 |
 | 開場カウントダウン | 当日は開場までの残り時間、開場後は開演までを 1 秒ごとに表示 |
 | 画像で書き出す | 参戦履歴 / 参戦予定を画像（幅 1080px・高さは件数に応じて伸びる）にして保存・共有。月は範囲指定（例: 3〜5 月）も 1 年分もできる。60 件を超えると半分ずつ 2 枚に分かれる |
 
@@ -112,6 +114,20 @@ Supabase（Postgres + RLS / Storage）
 ライブとは**名前で結び付けています**。`lives` 側は従来どおりテキストで持ち、
 設定を付けたいアーティストだけ `artists` に行を作ります。
 設定が無いアーティストも、ライブ記録から自動で一覧に出ます。
+
+### songs テーブル（アーティストの全曲カタログ）
+
+| 列 | 型 | 説明 |
+| --- | --- | --- |
+| artist_name | text | アーティスト名（lives / artists と名前で結び付ける） |
+| title | text | 曲名（配信版の表記） |
+| title_key | text | 表記ゆれを吸収した照合用の曲名 |
+| album / release_date | text / date | 収録作品・発売日 |
+| artwork_url / track_url | text | ジャケット画像・Apple Music へのリンク |
+
+全曲は [iTunes Search API](https://performance-partners.apple.com/search-api)（キー不要）から取り込みます。
+セトリは `lives.setlist` に自由入力のまま持ち、1 行 1 曲に分解してから `title_key` で突き合わせます。
+「Dragon Night (Live)」「DRAGON NIGHT」のような書き方の違いは同じ曲として扱います。
 
 ### lives テーブル
 
@@ -236,5 +252,7 @@ bash scripts/generate-icons.sh
 ---
 
 ## 8. ライセンス / クレジット
+
+曲のデータは Apple の [iTunes Search API](https://performance-partners.apple.com/search-api) から取得しています。
 
 日本地図の県境パスデータは [@svg-maps/japan](https://github.com/VictorCazanave/svg-maps)（MIT License）を使用しています。

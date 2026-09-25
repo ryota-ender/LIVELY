@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ArtistSettings } from "./artists";
+import type { Song } from "./songs";
 import { IMAGE_BUCKET, SIGNED_URL_TTL } from "./storage";
 import { createClient } from "./supabase/server";
 import type { Live, LiveWithImage } from "./types";
@@ -56,7 +57,9 @@ export async function loadArtistSettings(): Promise<LoadResult<ArtistSettings[]>
 
   const { data, error } = await supabase
     .from("artists")
-    .select("id, user_id, name, fan_since, memo, url, created_at, updated_at")
+    .select(
+      "id, user_id, name, fan_since, memo, url, itunes_artist_id, catalog_updated_at, created_at, updated_at",
+    )
     .order("name");
 
   if (error) {
@@ -69,6 +72,41 @@ export async function loadArtistSettings(): Promise<LoadResult<ArtistSettings[]>
   }
 
   return { ok: true, data: data ?? [] };
+}
+
+/** Supabase が 1 回の問い合わせで返す行数の上限（サーバー側の既定値） */
+const PAGE_SIZE = 1000;
+
+/**
+ * 取り込み済みの全曲カタログ。
+ * 1 回で返るのは 1,000 行までなので（数組取り込むと超える）、ページを送って全件集める。
+ */
+export async function loadSongs(): Promise<LoadResult<Song[]>> {
+  const supabase = await createClient();
+  const all: Song[] = [];
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("songs")
+      .select("id, user_id, artist_name, title, title_key, album, release_date, artwork_url, track_url")
+      .order("artist_name")
+      .order("title_key") // ページをまたいで順序が揺れないよう、一意になる並びにする
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      return {
+        ok: false,
+        message: error.message,
+        code: error.code ?? null,
+        hint: error.hint ?? null,
+      };
+    }
+
+    all.push(...(data ?? []));
+    if (!data || data.length < PAGE_SIZE) break;
+  }
+
+  return { ok: true, data: all };
 }
 
 /** 1 件だけ取得する（見つからなければ data が null） */

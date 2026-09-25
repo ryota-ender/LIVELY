@@ -9,7 +9,8 @@ import { ChartIcon } from "@/components/icons";
 import { BarList } from "@/components/charts/BarList";
 import { ColumnChart } from "@/components/charts/ColumnChart";
 import { todayInTokyo } from "@/lib/format";
-import { loadLives } from "@/lib/lives";
+import { loadLives, loadSongs } from "@/lib/lives";
+import { collectHeardSongs } from "@/lib/song-stats";
 import { PREFECTURES } from "@/lib/prefectures";
 import {
   countByArtist,
@@ -25,7 +26,7 @@ export const metadata: Metadata = { title: "統計" };
 
 export default async function StatsPage() {
   const today = todayInTokyo();
-  const result = await loadLives();
+  const [result, songsResult] = await Promise.all([loadLives(), loadSongs()]);
 
   if (!result.ok) {
     return (
@@ -38,6 +39,8 @@ export default async function StatsPage() {
 
   const lives = result.data;
   const summary = summarize(lives, today);
+  // 曲のカタログがまだ無くても（未取り込み・テーブル未作成）、セトリだけで数えられる
+  const heardSongs = collectHeardSongs(lives, songsResult.ok ? songsResult.data : [], today);
   const prefCounts = countByPrefecture(lives);
 
   const prefRanking: CountEntry[] = PREFECTURES.map((pref) => ({
@@ -71,6 +74,25 @@ export default async function StatsPage() {
       <div className="space-y-4">
         <Section title="年別の参戦数">
           <ColumnChart entries={countByYear(lives)} />
+        </Section>
+
+        <Section
+          title="聴いた曲 TOP10"
+          action={
+            <Link href="/songs" className="text-[0.7rem] text-neon-blue hover:underline">
+              すべて見る
+            </Link>
+          }
+        >
+          <BarList
+            entries={heardSongs.slice(0, 10).map((song) => ({
+              key: `${song.artist}-${song.titleKey}`,
+              label: `${song.title}（${song.artist}）`,
+              count: song.count,
+            }))}
+            accent="pink"
+            emptyText="ライブのセトリを入力すると、聴いた曲がここに並びます。"
+          />
         </Section>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

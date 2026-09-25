@@ -19,7 +19,14 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
-export function ArtistsClient({ artists }: { artists: ArtistSummary[] }) {
+export function ArtistsClient({
+  artists,
+  completion = {},
+}: {
+  artists: ArtistSummary[];
+  /** 全曲を取り込んだアーティストの「聴いた曲 / 全曲」 */
+  completion?: Record<string, { heard: number; total: number }>;
+}) {
   const [editingName, setEditingName] = useState<string | null>(null);
   const editing = editingName ? (artists.find((a) => a.name === editingName) ?? null) : null;
 
@@ -94,6 +101,35 @@ export function ArtistsClient({ artists }: { artists: ArtistSummary[] }) {
                 {artist.settings.memo}
               </p>
             ) : null}
+
+            {completion[artist.name] ? (
+              <div className="mt-3 border-t border-line-soft pt-3">
+                <div className="flex items-baseline gap-2 text-xs">
+                  <span className="text-faint">コンプリート</span>
+                  <span className="font-semibold">
+                    {completion[artist.name].heard} / {completion[artist.name].total} 曲
+                  </span>
+                  <span className="ml-auto font-black text-neon-pink">
+                    {Math.round((completion[artist.name].heard / completion[artist.name].total) * 100)}%
+                  </span>
+                </div>
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/8">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-neon-violet to-neon-pink"
+                    style={{
+                      width: `${(completion[artist.name].heard / completion[artist.name].total) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            <Link
+              href={`/songs?artist=${encodeURIComponent(artist.name)}`}
+              className="btn btn-ghost mt-3 w-full text-xs"
+            >
+              {completion[artist.name] ? "コンプリートブックを見る" : "全曲を取り込んでコンプリートブックを作る"}
+            </Link>
 
             {artist.attended + artist.upcoming > 0 ? (
               <Link

@@ -11,6 +11,9 @@ export type ArtistSettings = {
   fan_since: string | null;
   memo: string | null;
   url: string | null;
+  /** 全曲カタログの取り込み元（iTunes のアーティスト ID） */
+  itunes_artist_id: number | null;
+  catalog_updated_at: string | null;
   created_at: string;
   updated_at: string;
 };
