@@ -151,6 +151,70 @@ create policy "artists_delete_own" on public.artists
   using (auth.uid() = user_id);
 
 
+-- iTunes のアーティスト ID（全曲カタログの取り込み元）
+alter table public.artists add column if not exists itunes_artist_id bigint;
+alter table public.artists add column if not exists catalog_updated_at timestamptz;
+
+-- =============================================================
+-- 曲（アーティストの全曲カタログ。iTunes から取り込む）
+--
+-- セトリ（lives.setlist）は自由入力のまま持ち、曲名を正規化した
+-- title_key でこのカタログと突き合わせて「聴いた / まだ」を判定する。
+-- =============================================================
+create table if not exists public.songs (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null default auth.uid() references auth.users (id) on delete cascade,
+
+  artist_name  text not null check (char_length(artist_name) between 1 and 100),
+  title        text not null check (char_length(title) between 1 and 300),
+  -- 表記ゆれを吸収した照合用の曲名（src/lib/songs.ts の titleKey）
+  title_key    text not null check (char_length(title_key) between 1 and 300),
+
+  album        text,
+  release_date date,
+  artwork_url  text,
+  track_url    text,
+  itunes_track_id bigint,
+
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+
+  unique (user_id, artist_name, title_key)
+);
+
+create index if not exists songs_user_artist_idx on public.songs (user_id, artist_name);
+
+drop trigger if exists songs_set_updated_at on public.songs;
+create trigger songs_set_updated_at
+  before update on public.songs
+  for each row execute function public.set_updated_at();
+
+grant select, insert, update, delete on public.songs to authenticated;
+
+alter table public.songs enable row level security;
+
+drop policy if exists "songs_select_own" on public.songs;
+create policy "songs_select_own" on public.songs
+  for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "songs_insert_own" on public.songs;
+create policy "songs_insert_own" on public.songs
+  for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "songs_update_own" on public.songs;
+create policy "songs_update_own" on public.songs
+  for update to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "songs_delete_own" on public.songs;
+create policy "songs_delete_own" on public.songs
+  for delete to authenticated
+  using (auth.uid() = user_id);
+
+
 -- -------------------------------------------------------------
 -- 画像用ストレージ（非公開バケット / 署名付き URL で配信）
 -- -------------------------------------------------------------
