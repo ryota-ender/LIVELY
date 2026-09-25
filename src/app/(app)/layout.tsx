@@ -12,7 +12,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <AppHeader userName={user.displayName} />
-      <div className="mx-auto w-full max-w-5xl flex-1 px-4 pt-5 pb-28 sm:pb-12">{children}</div>
+      {/*
+       * 内容が短いページ（ライブ詳細など）でもスクロールできる高さを確保する。
+       * スクロールできないとモバイルブラウザがツールバーを畳まず、
+       * 下部タブだけ一覧ページより高い位置に出てしまうため。
+       */}
+      <div className="mx-auto min-h-svh w-full max-w-5xl flex-1 px-4 pt-5 pb-28 sm:pb-12">
+        {children}
+      </div>
       <BottomNav />
     </>
   );
