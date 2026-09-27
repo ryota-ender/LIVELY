@@ -347,7 +347,7 @@ export function LiveForm({
             id="setlist"
             name="setlist"
             rows={5}
-            className="field resize-y font-mono text-xs"
+            className="field resize-y font-mono"
             defaultValue={live?.setlist ?? ""}
             placeholder={"1. 〇〇\n2. △△\n3. …"}
           />

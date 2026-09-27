@@ -31,6 +31,8 @@
   html {
     color-scheme: dark;
     -webkit-tap-highlight-color: transparent;
+    /* ダブルタップでの拡大をしない（タップの反応も速くなる） */
+    touch-action: manipulation;
   }
 
   body {
@@ -103,7 +105,8 @@
     border: 1px solid var(--color-line);
     background-color: rgb(6 3 14 / 0.6);
     padding: 0.55rem 0.75rem;
-    font-size: 0.9rem;
+    /* 16px 未満だと iOS がフォーカス時に画面を拡大してしまう */
+    font-size: 1rem;
     color: var(--color-text);
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -186,6 +189,9 @@
     font-weight: 700;
     line-height: 1.5;
     white-space: nowrap;
+    /* 中身が長くても親の幅を超えない（はみ出しで画面が横に広がるのを防ぐ） */
+    max-width: 100%;
+    overflow: hidden;
   }
 }
 
@@ -194,5 +200,18 @@
   .scroll-slim {
     scrollbar-width: thin;
     scrollbar-color: var(--color-line) transparent;
+  }
+}
+
+/*
+ * iOS は 16px 未満の入力欄にフォーカスすると画面を拡大する。
+ * text-xs などで個別に小さくした入力欄も含めて、iOS でだけ 16px にそろえる。
+ * （レイヤーの外に書くと Tailwind のユーティリティより優先される）
+ */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
   }
 }

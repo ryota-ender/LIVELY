@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Noto_Sans_JP } from "next/font/google";
 
+import { NoZoom } from "@/components/NoZoom";
+
 import "./globals.css";
 
 const notoSansJp = Noto_Sans_JP({
@@ -37,6 +39,9 @@ export const viewport: Viewport = {
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
+  // アプリとして使う想定なので、ピンチや入力時の拡大をしない
+  maximumScale: 1,
+  userScalable: false,
   // ホーム画面から起動したときに画面いっぱいに表示する
   viewportFit: "cover",
 };
@@ -47,7 +52,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ja"
       className={`${notoSansJp.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="font-sans min-h-full flex flex-col">{children}</body>
+      <body className="font-sans min-h-full flex flex-col">
+        <NoZoom />
+        {children}
+      </body>
     </html>
   );
 }

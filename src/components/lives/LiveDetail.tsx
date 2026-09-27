@@ -57,7 +57,11 @@ export function LiveDetail({ live, today }: { live: LiveWithImage; today: string
           {live.co_artists.length > 0 ? (
             <span className="flex flex-wrap gap-1.5">
               {live.co_artists.map((artist) => (
-                <span key={artist} className="badge bg-white/5 text-muted ring-1 ring-line">
+                <span
+                  key={artist}
+                  // バッジは既定で折り返さないので、長い名前が画面外へ出ないよう折り返しを許す
+                  className="badge max-w-full bg-white/5 whitespace-normal text-muted ring-1 ring-line"
+                >
                   {artist}
                 </span>
               ))}
