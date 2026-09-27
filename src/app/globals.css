@@ -214,4 +214,22 @@
   textarea {
     font-size: max(16px, 1em);
   }
+
+  /*
+   * iOS の日付・時刻欄は、標準の見た目のままだと box-sizing が content-box に
+   * 固定され、width: 100% に余白と枠線の分が足されて右にはみ出す。
+   * 標準の見た目を外すと border-box に戻る（タップでの日付選択はそのまま使える）。
+   * 見た目を外すと空欄のとき高さが潰れるので、ほかの入力欄と同じ高さを確保する。
+   */
+  input[type="date"],
+  input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: calc(1.5em + 1.1rem + 2px);
+  }
+
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
