@@ -14,6 +14,7 @@ export function CatalogImporter({
   itunesArtistId,
   songCount,
   compact = false,
+  onImported,
 }: {
   artistName: string;
   /** 前回取り込んだ iTunes のアーティスト ID */
@@ -21,6 +22,8 @@ export function CatalogImporter({
   songCount: number;
   /** 一覧の中に置くときの小さい表示 */
   compact?: boolean;
+  /** 取り込みが終わったとき（セトリ選択で候補を読み直すのに使う） */
+  onImported?: () => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [candidates, setCandidates] = useState<ItunesArtist[] | null>(null);
@@ -33,6 +36,7 @@ export function CatalogImporter({
       if (result.ok) {
         setCandidates(null);
         setMessage({ tone: "ok", text: `${result.count} 曲を取り込みました。` });
+        onImported?.();
       } else {
         setMessage({ tone: "error", text: result.message });
       }

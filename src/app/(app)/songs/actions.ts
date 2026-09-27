@@ -100,3 +100,44 @@ export async function importArtistCatalog(
   revalidatePath("/stats");
   return { ok: true, count: songs.length };
 }
+
+/** セトリ選択で使う曲（画面に渡すので必要な列だけ） */
+export type PickableSong = {
+  artist_name: string;
+  title: string;
+  title_key: string;
+  release_date: string | null;
+};
+
+export type CatalogResult = { ok: true; songs: PickableSong[] } | { ok: false; message: string };
+
+/** 指定したアーティストの全曲カタログを返す（ライブ登録のセトリ選択用） */
+export async function getCatalogFor(artistNames: string[]): Promise<CatalogResult> {
+  const names = [...new Set(artistNames.map((n) => n.trim()).filter(Boolean))].slice(0, 20);
+  if (names.length === 0) return { ok: true, songs: [] };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "ログインし直してください。" };
+
+  // 1 回の取得は 1000 行までなので、共演が多くても全曲そろうようページ送りで読む
+  const PAGE_SIZE = 1000;
+  const songs: PickableSong[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("songs")
+      .select("artist_name, title, title_key, release_date")
+      .eq("user_id", user.id)
+      .in("artist_name", names)
+      .order("release_date", { ascending: false, nullsFirst: false })
+      .order("title_key")
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) return { ok: false, message: `曲の読み込みに失敗しました: ${error.message}` };
+    songs.push(...(data ?? []));
+    if (!data || data.length < PAGE_SIZE) break;
+  }
+  return { ok: true, songs };
+}

@@ -15,25 +15,36 @@ export function ArtistFields({
   defaultArtists,
   options,
   listId,
+  onChange,
 }: {
   /** 編集時の初期値（[メイン, 共演...]） */
   defaultArtists: string[];
   /** 入力候補（登録済みのアーティスト名） */
   options: string[];
   listId: string;
+  /** 入力中のアーティスト名（空欄を除く）が変わったとき */
+  onChange?: (names: string[]) => void;
 }) {
   const seed = defaultArtists.length > 0 ? defaultArtists : [""];
   // サーバー描画とクライアントで同じ値になるよう、乱数ではなく連番を使う
   const nextId = useRef(seed.length);
   const [rows, setRows] = useState(() => seed.map((value, index) => ({ id: index, value })));
 
+  // 変更のたびに、入力中の名前を呼び出し元へ知らせる（イベントの中で知らせ、再描画を連鎖させない）
+  const commit = (next: typeof rows) => {
+    setRows(next);
+    onChange?.(next.map((row) => row.value.trim()).filter(Boolean));
+  };
+
   const update = (id: number, value: string) =>
-    setRows((prev) => prev.map((row) => (row.id === id ? { ...row, value } : row)));
+    commit(rows.map((row) => (row.id === id ? { ...row, value } : row)));
 
-  const add = () => setRows((prev) => [...prev, { id: nextId.current++, value: "" }]);
+  const add = () => commit([...rows, { id: nextId.current++, value: "" }]);
 
-  const remove = (id: number) =>
-    setRows((prev) => (prev.length <= 1 ? prev : prev.filter((row) => row.id !== id)));
+  const remove = (id: number) => {
+    if (rows.length <= 1) return;
+    commit(rows.filter((row) => row.id !== id));
+  };
 
   return (
     <div>

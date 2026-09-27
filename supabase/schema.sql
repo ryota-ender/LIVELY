@@ -158,7 +158,7 @@ alter table public.artists add column if not exists catalog_updated_at timestamp
 -- =============================================================
 -- 曲（アーティストの全曲カタログ。iTunes から取り込む）
 --
--- セトリ（lives.setlist）は自由入力のまま持ち、曲名を正規化した
+-- セトリ（lives.setlist）は 1 行 1 曲のテキストで持ち、曲名を正規化した
 -- title_key でこのカタログと突き合わせて「聴いた / まだ」を判定する。
 -- =============================================================
 create table if not exists public.songs (

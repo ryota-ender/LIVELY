@@ -9,10 +9,44 @@ import {
   mapUrl,
 } from "@/lib/format";
 import { prefectureName } from "@/lib/prefectures";
+import { parseSetlistEntries } from "@/lib/songs";
 import { LIVE_TYPE_LABELS, type LiveWithImage } from "@/lib/types";
 
 import { ExternalLinkIcon } from "../icons";
 import { DoorCountdown } from "./DoorCountdown";
+
+/** セトリを曲番号付きで表示する（アンコールの区切りは番号を振らない） */
+function SetlistView({ setlist }: { setlist: string | null }) {
+  const entries = parseSetlistEntries(setlist);
+  if (entries.length === 0) {
+    return <span className="text-faint">未記入</span>;
+  }
+
+  let n = 0;
+  const numbered = entries.map((entry) => (entry.type === "song" ? { ...entry, n: ++n } : entry));
+
+  return (
+    <ol className="rounded-lg bg-ink/60 px-3 py-2 text-sm">
+      {numbered.map((entry, index) =>
+        entry.type === "song" ? (
+          <li key={index} className="flex gap-2 py-0.5">
+            <span className="w-5 shrink-0 text-right text-xs leading-5 font-black text-faint">
+              {entry.n}
+            </span>
+            <span className="min-w-0">{entry.title}</span>
+          </li>
+        ) : (
+          <li
+            key={index}
+            className="my-1.5 border-t border-line-soft pt-1.5 text-[0.7rem] font-bold tracking-widest text-neon-pink"
+          >
+            アンコール
+          </li>
+        ),
+      )}
+    </ol>
+  );
+}
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -115,13 +149,7 @@ export function LiveDetail({ live, today }: { live: LiveWithImage; today: string
           )}
         </Row>
         <Row label="セットリスト">
-          {live.setlist ? (
-            <span className="block rounded-lg bg-ink/60 p-3 font-mono text-xs whitespace-pre-wrap">
-              {live.setlist}
-            </span>
-          ) : (
-            <span className="text-faint">未記入</span>
-          )}
+          <SetlistView setlist={live.setlist} />
         </Row>
       </dl>
     </div>

@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { LIVE_TYPES, LIVE_TYPE_LABELS, type LiveWithImage } from "@/lib/types";
 
 import { ArtistFields } from "./ArtistFields";
+import { SetlistPicker } from "./SetlistPicker";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -41,6 +42,11 @@ export function LiveForm({
   );
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  // セトリの曲候補を出すため、入力中のアーティストを持っておく
+  const [artistNames, setArtistNames] = useState<string[]>(() =>
+    live ? [live.artist_name, ...live.co_artists] : [],
+  );
 
   // 画像はフォーム送信前に Storage へ直接アップロードし、パスだけを送る
   const [imagePath, setImagePath] = useState<string | null>(live?.image_path ?? null);
@@ -165,6 +171,7 @@ export function LiveForm({
           defaultArtists={live ? [live.artist_name, ...live.co_artists] : []}
           options={artistOptions}
           listId={artistListId}
+          onChange={setArtistNames}
         />
 
         <div>
@@ -339,19 +346,7 @@ export function LiveForm({
           />
         </div>
 
-        <div>
-          <label className="field-label" htmlFor="setlist">
-            セットリスト <span className="font-normal text-faint">（開催後に追記でも OK）</span>
-          </label>
-          <textarea
-            id="setlist"
-            name="setlist"
-            rows={5}
-            className="field resize-y font-mono"
-            defaultValue={live?.setlist ?? ""}
-            placeholder={"1. 〇〇\n2. △△\n3. …"}
-          />
-        </div>
+        <SetlistPicker defaultValue={live?.setlist ?? null} artistNames={artistNames} />
 
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" className="btn btn-ghost" onClick={handleCancel} disabled={pending}>

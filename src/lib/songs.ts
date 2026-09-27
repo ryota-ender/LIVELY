@@ -90,3 +90,60 @@ export function parseSetlist(text: string | null | undefined): string[] {
     .map((line) => line.replace(BULLET, "").replace(ENUMERATOR, "").trim())
     .filter((line) => !isHeaderLine(line));
 }
+
+/** セトリの 1 項目（曲、またはアンコールの区切り） */
+export type SetlistEntry = { type: "song"; title: string } | { type: "encore" };
+
+/** アンコールの区切りとして扱う見出し（MC や SE などは区切りにせず捨てる） */
+const ENCORE_WORD = /^(?:アンコール|ダブルアンコール|wアンコール|encore|en)$/i;
+
+/** 保存するときのアンコールの区切りの書き方 */
+export const ENCORE_LINE = "アンコール";
+
+/**
+ * セトリを「曲」と「アンコールの区切り」の並びにする（画面での表示・編集用）。
+ * 集計用の parseSetlist と違い、アンコールの位置を残す。
+ */
+export function parseSetlistEntries(text: string | null | undefined): SetlistEntry[] {
+  if (!text) return [];
+
+  const entries: SetlistEntry[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.normalize("NFKC").trim();
+    if (line === "") continue;
+
+    if (isHeaderLine(line)) {
+      const decorated = line.match(DECORATED_HEADER);
+      const word = (decorated ? decorated[1] : line).replace(/\s/g, "");
+      // 区切りが続けて入っていたら 1 つにまとめる
+      if (ENCORE_WORD.test(word) && entries.at(-1)?.type !== "encore") {
+        entries.push({ type: "encore" });
+      }
+      continue;
+    }
+
+    const title = line.replace(BULLET, "").replace(ENUMERATOR, "").trim();
+    if (title && !isHeaderLine(title)) entries.push({ type: "song", title });
+  }
+
+  // 末尾に区切りだけ残っていても意味がないので落とす
+  while (entries.at(-1)?.type === "encore") entries.pop();
+  return entries;
+}
+
+/** 編集した並びを保存用のテキストにする（1 行 1 曲。番号は表示側で振る） */
+export function serializeSetlist(entries: SetlistEntry[]): string {
+  // 曲の前後に来ない区切り（先頭・末尾・連続）は意味がないので保存しない
+  const lines: string[] = [];
+  let pendingEncore = false;
+  for (const entry of entries) {
+    if (entry.type === "encore") {
+      pendingEncore = lines.length > 0;
+      continue;
+    }
+    if (pendingEncore) lines.push(ENCORE_LINE);
+    pendingEncore = false;
+    lines.push(entry.title);
+  }
+  return lines.join("\n");
+}
