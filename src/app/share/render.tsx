@@ -12,11 +12,39 @@ const ROOMY_ROW = 96;
 const DENSE_ROW = 50;
 const MIN_HEIGHT = 1080;
 
+/** 見出しの左側（件数表示を除いた幅） */
+const TITLE_WIDTH = 640;
+
+/** 見出しが長いときは文字を小さくする */
+function titleFontSize(title: string): number {
+  const len = [...title].length;
+  if (len <= 9) return 64;
+  if (len <= 16) return 52;
+  return 44;
+}
+
+/** 見出しが何行に折り返すかの概算（全角を 1、半角を 0.55 文字分として数える） */
+function titleLines(title: string): number {
+  const size = titleFontSize(title);
+  const width = [...title].reduce((sum, ch) => sum + (ch.charCodeAt(0) < 0x2e80 ? 0.55 : 1), 0) * size;
+  return Math.max(1, Math.ceil(width / TITLE_WIDTH));
+}
+
+/** 見出しの高さ。名前が長い・補足があるときは縦に積むので高くなる */
+function headerHeight(title: string, stacked: boolean): number {
+  if (!stacked) return HEADER_HEIGHT;
+  return titleLines(title) * titleFontSize(title) * 1.2 + 70 + 22;
+}
+
 /** 件数から画像の高さを決める */
-export function shareImageHeight(rowCount: number, hasPageLabel: boolean): number {
+export function shareImageHeight(
+  rowCount: number,
+  hasPageLabel: boolean,
+  header: number = HEADER_HEIGHT,
+): number {
   const rowHeight = rowCount > ROOMY_LIMIT ? DENSE_ROW : ROOMY_ROW;
   const pageLabelHeight = hasPageLabel ? 50 : 0;
-  const content = PADDING * 2 + HEADER_HEIGHT + rowCount * rowHeight + pageLabelHeight + 32;
+  const content = PADDING * 2 + header + rowCount * rowHeight + pageLabelHeight + 32;
   return Math.max(content, MIN_HEIGHT);
 }
 
@@ -42,6 +70,8 @@ async function loadFont(text: string, weight: 400 | 700): Promise<ArrayBuffer> {
 
 export type ShareImageInput = {
   title: string;
+  /** 見出しの補足（ツアーならアーティスト名など） */
+  subtitle: string | null;
   badge: string;
   rows: ShareRow[];
   /** 期間全体の件数（分割していても合計を出す） */
@@ -52,18 +82,43 @@ export type ShareImageInput = {
 
 /** 参戦履歴 / 参戦予定を 1 枚の PNG にする */
 export async function renderShareImage(input: ShareImageInput): Promise<ImageResponse> {
-  const { title, badge, rows, total, page, pageCount } = input;
+  const { title, subtitle, badge, rows, total, page, pageCount } = input;
 
   const dense = rows.length > ROOMY_LIMIT;
+  // 「2026年 参戦予定」のような短い見出しは 1 行、アーティスト名・ツアー名は縦に積む
+  const stacked = subtitle !== null || titleFontSize(title) < 64;
+  const header = headerHeight(title, stacked);
+  // 年付きの日付（2019/5/1）は幅を広く取る
+  const withYear = rows.some((r) => r.date.split("/").length === 3);
+  const dateWidth = withYear ? (dense ? 150 : 170) : dense ? 96 : 104;
+
+  const badgeEl = (
+    <div
+      style={{
+        display: "flex",
+        flexShrink: 0,
+        fontSize: 28,
+        fontWeight: 700,
+        color: "#0d0819",
+        backgroundColor: "#ff3ec8",
+        borderRadius: 999,
+        padding: "8px 24px",
+      }}
+    >
+      {badge}
+    </div>
+  );
   const pageLabel = pageCount > 1 ? `${page} / ${pageCount}` : "";
 
   // 画像に出る文字をすべて集めてサブセットを作る
   const usedText = [
     title,
+    subtitle ?? "",
     badge,
     pageLabel,
-    "本0123456789/・記録がありません",
-    ...rows.flatMap((r) => [r.date, r.artist, r.place]),
+    // 「…」は長い名前を省略するときに Satori が使う
+    "本0123456789/・…記録がありません",
+    ...rows.flatMap((r) => [r.date, r.main, r.sub]),
   ].join("");
 
   const [regular, bold] = await Promise.all([loadFont(usedText, 400), loadFont(usedText, 700)]);
@@ -85,25 +140,48 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
         }}
       >
         {/* 見出し：2026年 参戦予定 ○本 */}
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1 }}>
-            {title}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              marginLeft: 24,
-              fontSize: 28,
-              fontWeight: 700,
-              color: "#0d0819",
-              backgroundColor: "#ff3ec8",
-              borderRadius: 999,
-              padding: "8px 24px",
-            }}
-          >
-            {badge}
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end", marginLeft: "auto" }}>
+        <div style={{ display: "flex", alignItems: stacked ? "flex-end" : "center" }}>
+          {stacked ? (
+            <div style={{ display: "flex", flexDirection: "column", width: TITLE_WIDTH }}>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: titleFontSize(title),
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                }}
+              >
+                {title}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", marginTop: 18 }}>
+                {badgeEl}
+                {subtitle ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      marginLeft: 20,
+                      fontSize: 30,
+                      fontWeight: 700,
+                      color: "#a99fc4",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {subtitle}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1 }}>
+                {title}
+              </div>
+              <div style={{ display: "flex", marginLeft: 24 }}>{badgeEl}</div>
+            </>
+          )}
+          <div style={{ display: "flex", alignItems: "flex-end", marginLeft: "auto", flexShrink: 0 }}>
             <div
               style={{
                 display: "flex",
@@ -152,7 +230,7 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
               <div
                 style={{
                   display: "flex",
-                  width: dense ? 96 : 104,
+                  width: dateWidth,
                   flexShrink: 0,
                   fontSize: dense ? 23 : 26,
                   fontWeight: 700,
@@ -177,7 +255,7 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {row.artist}
+                    {row.main}
                   </div>
                   <div
                     style={{
@@ -190,7 +268,7 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {row.place}
+                    {row.sub}
                   </div>
                 </div>
               ) : (
@@ -206,11 +284,11 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {row.artist}
+                    {row.main}
                   </div>
                   <div
                     style={{
-                      display: "flex",
+                      display: row.sub ? "flex" : "none",
                       marginTop: 3,
                       fontSize: 22,
                       color: "#a99fc4",
@@ -219,7 +297,7 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {row.place}
+                    {row.sub}
                   </div>
                 </div>
               )}
@@ -261,7 +339,7 @@ export async function renderShareImage(input: ShareImageInput): Promise<ImageRes
     ),
     {
       width: SHARE_IMAGE_WIDTH,
-      height: shareImageHeight(rows.length, pageLabel !== ""),
+      height: shareImageHeight(rows.length, pageLabel !== "", header),
       fonts: [
         { name: "Noto Sans JP", data: regular, weight: 400, style: "normal" },
         { name: "Noto Sans JP", data: bold, weight: 700, style: "normal" },

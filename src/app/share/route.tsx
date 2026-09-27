@@ -2,10 +2,9 @@ import { todayInTokyo } from "@/lib/format";
 import { loadLives } from "@/lib/lives";
 import { prefectureName } from "@/lib/prefectures";
 import {
-  parseSharePeriod,
-  periodLabel,
-  scopeLabel,
+  parseShareTarget,
   selectForShare,
+  shareHeading,
   sharePageCount,
   sliceForPage,
   toShareRows,
@@ -20,19 +19,19 @@ export async function GET(request: Request) {
 
   const today = todayInTokyo();
   const params = new URL(request.url).searchParams;
-  const period = parseSharePeriod(params, today.slice(0, 4));
+  const target = parseShareTarget(params, today.slice(0, 4));
   const page = Number(params.get("page") ?? "1") === 2 ? 2 : 1;
 
   const result = await loadLives();
   if (!result.ok) return new Response(result.message, { status: 500 });
 
-  const lives = selectForShare(result.data, period, today);
+  const lives = selectForShare(result.data, target, today);
   const pageCount = sharePageCount(lives.length);
-  const rows = toShareRows(sliceForPage(lives, page), prefectureName);
+  // 年の付け方は全体で揃えたいので、切り出す前の一覧で行を作る
+  const rows = sliceForPage(toShareRows(lives, target, prefectureName), page);
 
   return renderShareImage({
-    title: periodLabel(period),
-    badge: scopeLabel(period.scope),
+    ...shareHeading(target),
     rows,
     total: lives.length,
     page,
