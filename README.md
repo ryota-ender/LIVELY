@@ -205,6 +205,9 @@ npm run dev                  # http://localhost:3000
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 3. デプロイ後、Supabase の **Authentication → URL Configuration** の
    `Site URL` に Vercel の URL を設定する（確認メールのリンク先になります）
+4. サーバー処理は `vercel.json` で東京リージョン（`hnd1`）に固定しています。
+   Supabase のプロジェクトを東京以外に作った場合は、同じ地域のリージョンに書き換えてください
+   （離れていると、データを読むたびに太平洋を往復して画面遷移が遅くなります）
 
 ### 5-4. 旧 LivePlan のデータを取り込む（任意）
 

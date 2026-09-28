@@ -41,9 +41,11 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getUser() は毎回 Supabase の認証サーバーに問い合わせるため、画面遷移のたびに往復が増える。
+  // getClaims() は非対称鍵で署名されたトークンをこのサーバー内で検証するので速い。
+  // 期限が近いトークンはここで更新され、上の setAll で Cookie に書き戻される。
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub ? data.claims : null;
 
   const { pathname } = request.nextUrl;
 

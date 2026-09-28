@@ -14,7 +14,8 @@ export const metadata: Metadata = { title: "ライブの詳細" };
 export default async function LiveDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const result = await loadLive(id);
+  // 本体と入力候補用の一覧は互いに依存しないので同時に読む
+  const [result, all] = await Promise.all([loadLive(id), loadLives()]);
   if (!result.ok) {
     return (
       <main>
@@ -26,7 +27,6 @@ export default async function LiveDetailPage({ params }: { params: Promise<{ id:
   if (!result.data) notFound();
 
   // 編集フォームの入力候補（表記ゆれ防止）
-  const all = await loadLives();
   const lives = all.ok ? all.data : [];
 
   return (
