@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Noto_Sans_JP } from "next/font/google";
 
 import { NoZoom } from "@/components/NoZoom";
+import { SPLASH_SCRIPT, Splash } from "@/components/Splash";
 
 import "./globals.css";
 
@@ -51,8 +52,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="ja"
       className={`${notoSansJp.variable} ${geistMono.variable} h-full antialiased`}
+      // スプラッシュのスクリプトが描画前に data-splash を付けるため
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_SCRIPT }} />
+      </head>
       <body className="font-sans min-h-full flex flex-col">
+        <Splash />
         <NoZoom />
         {children}
       </body>

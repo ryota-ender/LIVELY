@@ -233,3 +233,103 @@
     text-align: left;
   }
 }
+
+/*
+ * 起動時のスプラッシュ（src/components/Splash.tsx）
+ * 0〜1 秒でロゴが浮かび上がり、2.2 秒から 0.8 秒かけて薄く消える（合計 約 3 秒）。
+ * 消えたあとは visibility: hidden になり、タップも下の画面に届く。
+ */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  background-color: var(--color-ink);
+  background-image:
+    radial-gradient(40rem 30rem at 20% 10%, rgb(255 62 200 / 0.18), transparent 60%),
+    radial-gradient(40rem 30rem at 85% 20%, rgb(59 167 255 / 0.16), transparent 60%),
+    radial-gradient(50rem 36rem at 50% 105%, rgb(168 85 247 / 0.16), transparent 65%);
+  animation: splash-out 0.8s ease-in-out 2.2s forwards;
+}
+
+.splash-mark {
+  animation: splash-in 1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.splash-word {
+  filter: drop-shadow(0 0 18px rgb(255 62 200 / 0.45));
+}
+
+.splash-line {
+  background-image: linear-gradient(90deg, var(--color-neon-pink), var(--color-neon-violet), var(--color-neon-blue));
+  transform-origin: center;
+  animation: splash-line 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.45s both;
+}
+
+.splash-tagline {
+  animation: splash-fade 0.8s ease 0.8s both;
+}
+
+/* 同じ起動の中の 2 回目以降（再読み込みなど）は出さない */
+html[data-splash="done"] .splash {
+  display: none;
+}
+
+/* 表示中にタップしたらすぐ消す */
+html[data-splash="skip"] .splash {
+  animation: splash-out 0.3s ease forwards;
+}
+
+@keyframes splash-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes splash-line {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes splash-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* 動きを減らす設定の端末では、動かさずに短めに出して消す */
+@media (prefers-reduced-motion: reduce) {
+  .splash-mark,
+  .splash-line,
+  .splash-tagline {
+    animation: none;
+  }
+
+  .splash {
+    animation-delay: 1.2s;
+  }
+}
